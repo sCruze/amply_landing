@@ -1,0 +1,23 @@
+- if @user_request.errors.any?
+  = turbo_stream.replace "user_request_form" do
+    = render "layouts/forms/form",
+             model: @user_request,
+             fields: [ { name: :name,  type: :text,  label: "Name",   placeholder: "Name",        required: true },
+                       { name: :email, type: :email, label: "E-mail", placeholder: "Your e-mail", required: true } ],
+             submit_text: "Submit",
+             note: "By clicking the “Submit” button, you agree to the Terms of Service and acknowledge the Privacy Policy regarding the processing of your personal data.",
+             html: { id: "waitlist-form" },
+             dom_id: "user_request_form"
+- else
+  = turbo_stream.replace "user_request_form" do
+    = render "layouts/forms/form",
+             model: (@user_request || UserRequest.new),
+             fields: [ { name: :name,  type: :text,  label: "Name",   placeholder: "Name",        required: true },
+                       { name: :email, type: :email, label: "E-mail", placeholder: "Your e-mail", required: true } ],
+             submit_text: "Submit",
+             note: "By clicking the “Submit” button, you agree to the Terms of Service and acknowledge the Privacy Policy regarding the processing of your personal data.",
+             html: { id: "waitlist-form" },
+             dom_id: "user_request_form"
+
+  = turbo_stream.update "modal_portal_frame" do
+    = render "user_requests/success"

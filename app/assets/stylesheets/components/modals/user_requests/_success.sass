@@ -1,0 +1,13 @@
+@use "base/variables"
+@use "base/mixins" as mix
+
+@layer components
+  .user-request--success
+    display: flex
+    flex-direction: column
+    @include mix.contentCenter
+    gap: 1.25rem
+
+    &__subtitle
+      max-width: 70%
+

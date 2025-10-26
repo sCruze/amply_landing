@@ -1,0 +1,47 @@
+@use "../base/mixins" as mix
+
+@layer base
+
+  //@include mix.font-face-smart( "InterVar", "fonts/inter/Inter-VF.woff2",
+  //                              $weight: "300 900",
+  //                              $local: ("InterVariable", "Inter Var"))
+  @include mix.font-face-smart("Manrope", "fonts/inter/Inter-Regular.woff2", $weight: 400, $local: ("Manrope", "Manrope Regular"))
+  @include mix.font-face-smart("Manrope", "fonts/inter/Inter-Middle.woff2",  $weight: 500, $local: ("Manrope", "Manrope Middle"))
+  @include mix.font-face-smart("Manrope", "fonts/inter/Inter-Bold.woff2",    $weight: 700, $local: ("Manrope", "Manrope Bold"))
+
+  *, *::before, *::after
+    box-sizing: border-box
+
+  html, body
+    height: 100%
+    font-family: var(--font-sans)
+    font-optical-sizing: auto
+    text-rendering: optimizeLegibility
+    -webkit-font-smoothing: antialiased
+    -moz-osx-font-smoothing: grayscale
+
+  body
+    margin: 0
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"
+    line-height: 1.5
+    -webkit-font-smoothing: antialiased
+    -moz-osx-font-smoothing: grayscale
+
+  h1, h2, h3, h4, h5, h6, p, blockquote, pre
+    margin: 0
+    padding: 0
+
+  a
+    outline: none
+    text-decoration: none
+
+  img, video, canvas, svg
+    display: block
+    max-width: 100%
+
+  input, button, textarea, select
+    font: inherit
+
+  .hidden
+    display: none
+

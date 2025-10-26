@@ -1,0 +1,24 @@
+= render Ui::Modal::ModalComponent.new( id: "user_request_success",
+                                        scheme: :light,
+                                        header_layout: :row,
+                                        size: :sm,
+                                        data: { modal_auto_open_value: true } ) do |c|
+
+  - c.with_body do
+    .user-request--success
+      = image_tag "user_requests/star.png",
+                  alt: "Иконка звезды",
+                  class: "user-request-success__icon",
+                  width: 56,
+                  height: 56
+
+      %h2.t-h2.user-request--success__title
+        = "Thank you, #{@name}!"
+
+      %p.t-text-20.user-request--success__subtitle
+        We’ve received your application — you’ll get a confirmation email soon.
+
+  - c.with_footer do
+    %button.ui-button.ui-button--red.ui-button--size-md{ type: "button", data: { action: "click->modal#close", modal_close: true } }
+      %span.ui-button__label
+        gold

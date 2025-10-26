@@ -1,0 +1,124 @@
+@use "../base/mixins" as mix
+
+@layer components
+  .ui-button
+    /* базовые токены геометрии */
+    --btn-py: .875rem
+    --btn-px: 1.25rem
+    --btn-gap: .375rem
+    --btn-radius: 1.25rem
+
+    /* базовые токены типографики */
+    --btn-ff: var(--font-sans)     /* семейство */
+    --btn-fs: var(--fs-body)       /* размер */
+    --btn-fw: var(--weight-medium) /* вес */
+    --btn-lh: 1                    /* line-height */
+
+    /* базовые токены цветов */
+    --btn-bg: var(--color-brand, #F6351D)
+    --btn-fg: #fff
+    --btn-border: transparent
+
+    display: inline-flex
+    align-items: center
+    justify-content: center
+    gap: var(--btn-gap)
+    padding: var(--btn-py) var(--btn-px)
+    border-radius: var(--btn-radius)
+    border: 1px solid var(--btn-border)
+    background: var(--btn-bg)
+    color: var(--btn-fg)
+
+    font-family: var(--btn-ff)
+    font-size: var(--btn-fs)
+    font-weight: var(--btn-fw)
+    line-height: var(--btn-lh)
+    font-style: normal
+
+    cursor: pointer
+    text-decoration: none
+    white-space: nowrap
+    @include mix.transition(background-color 160ms, color 160ms, border-color 160ms, transform 120ms)
+
+    @media (hover: hover) and (pointer: fine)
+      &:hover
+        background: color-mix(in oklab, var(--btn-bg), black 10%)
+
+    &:active
+      transform: translateY(1px)
+    &:focus-visible
+      outline: 2px solid color-mix(in oklab, var(--btn-bg), white 20%)
+      outline-offset: 2px
+
+    &.is-disabled, &[disabled]
+      opacity: .6
+      pointer-events: none
+
+    &__icon
+      inline-size: 1.1em
+      block-size: 1.1em
+    &__label
+      font: inherit
+      line-height: 1
+
+    /* -------- размеры (через типографику + padding) -------- */
+    /* LG — 24px, 500, 120%, цвет текста белый */
+    &--size-lg
+      --btn-fs: clamp(17px, 1.5vw + 12px, 24px)
+      --btn-py: clamp(1.25rem, 0.5rem + 2vw, 1.25rem)
+      --btn-px: clamp(1.25rem, 0.5rem + 2vw, 1.5rem)
+      --btn-gap: .5rem
+      --btn-radius: 1.25rem
+      --btn-ff: "Manrope", var(--font-sans)
+      --btn-fw: 500
+      --btn-lh: 1.2
+      --btn-fg: var(--neutral-color-neutral-0, #FFF)
+
+    /* MD — дефолт */
+    &--size-md
+      --btn-py: .75rem
+      --btn-px: 1rem
+      --btn-gap: .375rem
+      --btn-radius: 1rem
+      --btn-ff: var(--font-sans)
+      --btn-fs: var(--fs-body)
+      --btn-fw: var(--weight-medium)
+      --btn-lh: 1.2
+
+    /* SM — компакт */
+    &--size-sm
+      --btn-py: .5rem
+      --btn-px: .75rem
+      --btn-gap: .3125rem
+      --btn-radius: .75rem
+      --btn-ff: var(--font-sans)
+      --btn-fs: 15px
+      --btn-fw: var(--weight-medium)
+      --btn-lh: 1.2
+
+    &--red
+      --btn-bg: #F6351D
+      --btn-fg: #fff
+      --btn-border: transparent
+
+      @media (hover: hover) and (pointer: fine)
+        &:hover
+          background: color-mix(in oklab, #F6351D, black 12%)
+
+    &--red-outline
+      --btn-bg: transparent
+      --btn-fg: #F6351D
+      --btn-border: #F6351D
+      background: transparent
+
+      @media (hover: hover) and (pointer: fine)
+        &:hover
+          background: color-mix(in oklab, #F6351D, transparent 92%)
+
+      &:focus-visible
+        outline: 2px solid color-mix(in oklab, #F6351D, white 20%)
+        outline-offset: 2px
+
+  /* опционально: таблетка-форма */
+  .ui-button--pill
+    --btn-radius: 9999px

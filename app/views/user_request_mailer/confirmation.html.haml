@@ -1,0 +1,45 @@
+- content_for :title, "Thanks for joining the Amply waitlist"
+
+.brand{ style: "text-align:center; margin:0 0 16px;" }
+  %table{ role: "presentation", cellpadding: "0", cellspacing: "0", border: "0" }
+    %tr
+      %td{ style: "padding:0 8px 0 0; vertical-align:middle;" }
+        = image_tag "cid:amply-logo",
+                    alt: "Amply logo",
+                    width: 24,
+                    height: 24,
+                    style: "display:block; border:0; outline:0; text-decoration:none; border-radius:6px;"
+      %td{ style: "vertical-align:middle; font-weight:700; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; font-size:16px; line-height:1;" }
+        Amply
+
+
+
+%h1
+  THANKS FOR JOINING
+  %br
+  AMPLY WAITLIST.
+
+%p
+  Hi #{@user_request.name.presence || "there"},
+  Soon, you’ll get early access to a tool built to bring order to your day — without the noise.
+  Plan, track, and focus — all in one clean space.
+
+%p You’ll be among the first to:
+%ul
+  %li Turn ideas into actions
+  %li Capture thoughts instantly
+  %li Stay organized for work, study, and life
+
+%p We’ll keep you updated as we open early access.
+%p — The Amply Team
+
+%p.muted
+  You received this email because you signed up for early access to Amply.
+  By clicking “Submit” or continuing to use the service, you agree to our
+  %a{ href: "https://amply.example.com/terms", style: "color:#0f172a;" } Terms of Service
+  and
+  %a{ href: "https://amply.example.com/privacy", style: "color:#0f172a;" } Privacy Policy.
+
+%p.muted
+  If you no longer wish to receive emails from Amply, you can unsubscribe here:
+  %a{ href: "https://amply.example.com/unsubscribe?email=#{ERB::Util.url_encode(@user_request.email)}", style: "color:#0f172a;" } Unsubscribe

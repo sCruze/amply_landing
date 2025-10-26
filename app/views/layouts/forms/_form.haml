@@ -1,0 +1,94 @@
+-# locals: model: @user_request ИЛИ url:/method:
+-#         fields:, submit_text:, note:, html:{}, dom_id:
+
+- form_locals = local_assigns
+- html_opts   = (form_locals[:html] || {}).dup
+- html_opts[:class] = ["form", html_opts[:class]].compact.join(" ")
+- html_opts[:novalidate] = true
+
+- fields      = (form_locals[:fields] || [])
+- form_dom_id = form_locals[:dom_id] || "form_#{SecureRandom.hex(4)}"
+
+- has_model  = form_locals.key?(:model) && form_locals[:model].present?
+- form_args  = has_model ? { model: form_locals[:model] } : { url: form_locals[:url], method: (form_locals[:method] || :post) }
+
+- form_has_errors = has_model && form_locals[:model].respond_to?(:errors) && form_locals[:model].errors.any?
+- if form_has_errors
+  - html_opts[:class] = [html_opts[:class], "form--invalid"].compact.join(" ")
+
+= turbo_frame_tag form_dom_id, class: "form__wrapper" do
+  = form_with(**form_args, html: html_opts, data: { turbo: true, controller: "form-validate" }) do |f|
+    - if content_for?(:form_title)
+      .form__title= yield :form_title
+
+    .form__stack
+      - fields.each do |fld|
+        - t         = (fld[:type] || :text).to_sym
+        - name      = fld[:name]
+        - label     = fld[:label]
+        - required  = !!fld[:required]
+        - hint      = fld[:hint]
+        - value     = fld[:value]
+        - options   = fld[:options] || []
+        - ihtml     = (fld[:input_html] || {}).dup
+        - input_id  = ihtml[:id] || "#{f.object_name}_#{name}"
+        - errors    = f.object&.errors&.full_messages_for(name) || []
+        - has_err   = errors.any?
+        - err_id    = "#{input_id}_errors"
+        - hint_id   = hint.present? ? "#{input_id}_hint" : nil
+        -# Показываем ошибки только через placeholder, поэтому aria-describedby — только hint
+        - described = [hint_id].compact.join(" ").presence
+
+        .form__control
+          - ihtml[:class] = ["form__input", (has_err ? "is-invalid" : nil), ihtml[:class]].compact.join(" ")
+          - ihtml[:id]    = input_id
+          - ihtml[:placeholder]    ||= fld[:placeholder]
+          - if has_err
+            - ihtml[:"data-prev-placeholder"] = ihtml[:placeholder]
+            - ihtml[:placeholder] = errors.first
+          - ihtml[:required]           = true  if required
+          - ihtml[:value]              = value if value
+          - ihtml[:"aria-invalid"]     = has_err
+          - ihtml[:"aria-describedby"] = described if described
+
+          - case t
+          - when :email
+            = f.email_field name, ihtml
+          - when :textarea
+            = f.text_area name, ihtml
+          - when :tel
+            = f.telephone_field name, ihtml
+          - when :number
+            = f.number_field name, ihtml
+          - when :password
+            = f.password_field name, ihtml
+          - when :select
+            - prompt = fld[:placeholder] || ""
+            = f.select name, options, { include_blank: prompt }, ihtml
+          - when :checkbox
+            .form__checkbox
+              = f.check_box name, ihtml
+              - if label.blank?
+                %label{ for: input_id, class: "form__label" }= (fld[:placeholder] || name.to_s.humanize)
+          - when :radio_group
+            .form__radios
+              - options.each_with_index do |(lbl, val), idx|
+                - rid = "#{input_id}_#{idx}"
+                %label.form__radio{ for: rid }
+                  = f.radio_button name, val, id: rid, class: "form__input", required: required
+                  %span.form__radio-label= lbl
+          - else
+            = f.text_field name, ihtml
+
+          - if hint.present?
+            .form__hint{ id: hint_id }= hint
+
+          -# - if has_err
+          -#   .form__error{ id: err_id }= safe_join(errors, tag.br)
+
+    .form__actions
+      = f.button type: :submit, class: "ui-button ui-button--red ui-button--size-md" do
+        %span.ui-button__label= (form_locals[:submit_text] || "Submit")
+
+    - if form_locals[:note].present?
+      %p.form__note.t-caption-15= form_locals[:note]

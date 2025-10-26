@@ -1,0 +1,18 @@
+default: &default
+  adapter: postgresql
+  encoding: unicode
+  # For details on connection pooling, see Rails configuration guide
+  # https://guides.rubyonrails.org/configuring.html#database-pooling
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+
+development:
+  <<: *default
+  database: amply_development
+
+test:
+  <<: *default
+  database: amply_test
+
+production:
+  <<: *default
+  database: amply_production

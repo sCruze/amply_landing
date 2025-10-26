@@ -1,0 +1,245 @@
+@use "../base/variables"
+@use "../base/typography"
+
+// Универсальный миксин текста
+@mixin text($size, $line: var(--leading-normal), $weight: var(--weight-regular))
+  font-family: var(--font-sans)
+  font-size: $size
+  line-height: $line
+  font-weight: $weight
+  font-style: normal
+
+// Специфичные удобные шорткаты
+@mixin text-body()
+  @include text(var(--fs-body), var(--font-body-line), var(--font-body-weight))
+
+@mixin text-title($level: 1)
+  @if $level == 0
+    @include text(var(--fs-display), var(--leading-tight), var(--weight-bold))
+  @else if $level == 1
+    @include text(var(--fs-h1), var(--leading-tight), var(--weight-bold))
+  @else if $level == 2
+    @include text(var(--fs-h2), var(--leading-tight), var(--weight-semibold))
+  @else if $level == 3
+    @include text(var(--fs-h3), var(--leading-normal), var(--weight-semibold))
+  @else
+    @include text(var(--fs-h3), var(--leading-normal), var(--weight-semibold))
+
+// Центрирование контента по обеим осям
+@mixin contentCenter()
+  align-items: center
+  justify-content: center
+  text-align: center
+
+// Запрет выделения текста (актуальные префиксы)
+@mixin unselectable()
+  -webkit-user-select: none
+  user-select: none
+
+// Алиас для обратной совместимости
+@mixin noSelect()
+  @include unselectable()
+
+// Transition с уважением к prefers-reduced-motion
+// $props: all | имя/список свойств; $time: 150ms; $curve: ease
+@mixin transition($transitions...)
+  transition: $transitions
+  @media (prefers-reduced-motion: reduce)
+    transition: none
+
+// ------------------
+// Шрифты (@font-face)
+// ------------------
+
+// Умное подключение шрифта (поддержка variable диапазонов, local(), font-display, unicode-range, feature settings)
+@mixin font-face-smart($family, $path_woff2, $style: normal, $weight: normal, $display: swap, $local: (), $unicode: null, $features: null)
+  @font-face
+    font-family: $family
+
+    // local() источники, если заданы
+    @if length($local) > 0
+      $locals: ()
+      @each $name in $local
+        $locals: append($locals, unquote("local('#{$name}')"), comma)
+      src: #{$locals}, url('#{$path_woff2}') format('woff2')
+    @else
+      src: url('#{$path_woff2}') format('woff2')
+
+    font-style: $style
+    font-weight: $weight // допускается диапазон: '300 900' для variable
+    font-display: $display
+
+    @if $features != null
+      font-feature-settings: #{$features}
+
+    @if $unicode != null
+      unicode-range: #{$unicode}
+
+// Легаси-миксин (совместимость). Используй .woff2 как основной.
+// $font-filename — путь без расширения; добавятся .woff2/.woff/.ttf при наличии.
+// Рекомендуется перейти на font-face-smart.
+@mixin font-face($font-family, $font-filename, $weight: normal, $style: normal)
+  @font-face
+    font-family: $font-family
+    src: url('#{$font-filename}.woff2') format('woff2'),
+    url('#{$font-filename}.woff') format('woff'),
+    url('#{$font-filename}.ttf') format('truetype')
+    font-weight: $weight
+    font-style: $style
+    font-display: swap
+
+// Хелпер для применения гарнитуры с fallback’ами и variable-опциями
+@mixin use-font($family, $size: null, $line: null, $weight: null, $optical: auto, $features: null)
+  font-family: $family, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"
+  @if $size != null
+    font-size: $size
+  @if $line != null
+    line-height: $line
+  @if $weight != null
+    font-weight: $weight
+  font-optical-sizing: $optical
+  @if $features != null
+    font-feature-settings: #{$features}
+
+// -----------------
+// Декор и анимации
+// -----------------
+
+// Декоративная полоса (stripe)
+@mixin stripe-block(
+  $color,
+  $radius,
+  $top: auto,
+  $bottom: auto,
+  $left: 0,
+  $width: 100%,
+  $height: 8px,
+  $border-top: 0,
+  $border-right: 0,
+  $border-bottom: 0,
+  $border-left: 0,
+  $rotate-deg: 0deg
+)
+  position: absolute
+  top: $top
+  bottom: $bottom
+  left: $left
+  width: $width
+  height: $height
+  border-radius: $radius
+  border-top: $border-top solid $color
+  border-right: $border-right solid $color
+  border-bottom: $border-bottom solid $color
+  border-left: $border-left solid $color
+  transform: rotate($rotate-deg)
+
+// Плавающий “шарик” с блюром
+@mixin boll($size, $top, $left, $color, $blur, $dx: 200px, $dy: 120px, $duration: 10s)
+  position: absolute
+  top: $top
+  left: $left
+  width: $size
+  aspect-ratio: 1 / 1
+  border-radius: 50%
+  background-color: $color
+  filter: blur($blur)
+  z-index: 0
+  animation: boll-move #{$duration} infinite alternate ease-in-out
+
+  @keyframes boll-move
+    0%
+      transform: translate3d(0, 0, 0)
+    100%
+      transform: translate3d($dx, $dy, 0)
+
+  @media (prefers-reduced-motion: reduce)
+    animation: none
+
+// Круговой прогресс: экспорт угла в deg через CSS-переменную
+@mixin circle-progress($progress-percentage)
+  --final-progress: #{($progress-percentage * 3.6)}deg
+
+// Полупрозрачный “glass” блок
+@mixin profile-block()
+  border-radius: var(--radius, .75rem)
+  background: color-mix(in oklab, var(--fg, #000) 8%, transparent)
+  -webkit-backdrop-filter: blur(18.5px)
+  backdrop-filter: blur(18.5px)
+  position: relative
+  border: 1px solid color-mix(in oklab, var(--fg, #000), transparent 90%)
+
+// -----------------
+// Медиа/изображения
+// -----------------
+
+// Контейнер под изображение с aspect-ratio и fallback
+@mixin dynamic-image-container($ratio: 16/9)
+  position: relative
+  width: 100%
+  overflow: hidden
+  background-color: #f9f9f9
+
+  // Современные браузеры
+  aspect-ratio: $ratio
+
+  // Fallback
+  @supports not (aspect-ratio: 1 / 1)
+    $padding-percentage: (1 / $ratio) * 100%
+    &::before
+      content: ''
+      display: block
+      padding-top: $padding-percentage
+
+  img
+    position: absolute
+    inset: 0
+    margin: auto
+    max-width: 100%
+    max-height: 100%
+    width: auto
+    height: auto
+    object-fit: cover
+    display: block
+    opacity: 0
+    animation: fade-in 0.5s forwards
+
+  &:hover img
+    transform: scale(1.05)
+    transition: transform 0.3s ease-in-out
+
+  @keyframes fade-in
+    to
+      opacity: 1
+
+// -----
+// Grid
+// -----
+
+// Контейнер: repeat + minmax
+@mixin grid-container($columns: 3, $gap: 1rem, $min: 0)
+  display: grid
+  grid-template-columns: repeat($columns, minmax($min, 1fr))
+  gap: $gap
+  align-items: stretch
+
+// Элемент
+@mixin grid-item($colStart, $colEnd, $rowStart: auto, $rowEnd: auto, $padding: 0)
+  grid-column: #{$colStart} / #{$colEnd}
+  @if $rowStart != auto or $rowEnd != auto
+    grid-row: #{$rowStart} / #{$rowEnd}
+  padding: $padding
+
+// Form
+// Использование: @include placeholder(#999);
+@mixin placeholder($color, $opacity: 1)
+  &::placeholder
+    color: $color
+    opacity: $opacity
+  &::-webkit-input-placeholder
+    color: $color
+    opacity: $opacity
+  &::-moz-placeholder
+    color: $color
+    opacity: $opacity
+  &:-ms-input-placeholder
+    color: $color

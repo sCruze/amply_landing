@@ -1,0 +1,95 @@
+@use "../base/variables"
+@use "../base/mixins" as mix
+
+.form__wrapper
+  max-width: 420px
+  margin: 0 auto
+
+  .form
+    display: grid
+    gap: 1rem
+
+    input[type="text"],
+    input[type="email"],
+    input[type="tel"],
+    input[type="search"],
+    input[type="password"],
+    textarea,
+    select
+      -webkit-appearance: none
+      appearance: none
+      width: 100%
+      border: 1px solid transparent
+      padding: 18px 20px
+      font-size: 16px
+      line-height: 1.2
+      color: var(--c-text, #111315)
+      background-color: transparent
+      transition: background-color .2s ease, border-color .2s ease, box-shadow .2s ease, transform .02s ease
+
+    textarea
+      min-height: 110px
+      resize: vertical
+
+    input::placeholder,
+    textarea::placeholder
+      color: var(--c-placeholder, #B2B6BC)
+
+    input:hover,
+    textarea:hover
+      background: var(--c-input-bg-hover, #f1f2f5)
+
+    input:focus,
+    textarea:focus
+      outline: none
+      //border-color: var(--c-border-focus, rgba(17,19,21,.06))
+      //background: var(--c-input-bg-focus, #fff)
+      //box-shadow: var(--shadow-focus, 0 0 0 4px rgba(255,59,48,.15)), var(--shadow-soft, 0 1px 1px rgba(17,19,21,.06), 0 6px 16px rgba(17,19,21,.06))
+
+    &__stack
+      overflow: hidden
+      background: var(--color-muted)
+      border-radius: var(--radius-lg)
+
+      .form__control
+        border-bottom: 1px solid #DEDEDE
+
+        &:last-child
+          border-bottom: none
+
+    &--invalid
+      .field_with_errors
+        .is-invalid
+          @include mix.placeholder(var(--color-danger))
+
+
+    //& .is-invalid,
+    //& input:invalid,
+    //& textarea:invalid
+    //  border-color: var(--c-danger-40, rgba(255,59,48,.45))
+    //  background: #fff
+
+  & .form__hint
+    font-size: 12px
+    color: var(--c-muted, #8F949A)
+
+  & .form__error
+    margin-top: 6px
+    font-size: 12px
+    color: var(--c-danger, #ff3b30)
+
+  & .form__actions
+    display: flex
+    justify-content: center
+    margin-top: 6px
+
+  & .form__note
+    margin-top: 14px
+    font-size: 12px
+    line-height: 1.5
+    color: var(--c-muted, #8F949A)
+    text-align: center
+
+  /* адаптив лёгкий */
+  //@media (min-width: 768px)
+  //  gap: 1rem

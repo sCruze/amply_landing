@@ -1,0 +1,52 @@
+:root
+  /* База */
+  --font-body-size: 17px
+  --font-body-line: 1.2
+  --font-body-weight: 500
+
+  /* Вес */
+  --weight-regular: 400
+  --weight-medium: 500
+  --weight-semibold: 600
+  --weight-bold: 800
+
+  /* Лидинг */
+  --leading-tight: 1.1
+  --leading-normal: 1.2
+  --leading-relaxed: 1.5
+
+  /* Масштаб заголовков (адаптивный пример) */
+  --fs-display: clamp(40px, 6vw, 64px)
+  --fs-h1:      clamp(40px, 4.5vw, 80px)
+  --fs-h2:      clamp(30px, 3.5vw, 40px)
+  --fs-h3:      clamp(20px, 2.6vw, 24px)
+  --fs-sub:     clamp(17px, 2.5vw, 30px)
+
+  /* ===== Шкала обычного текста (fixed + fluid) ===== */
+  /* FIXED (px) */
+  --tx-xs-fixed: 12px
+  --tx-sm-fixed: 14px
+  --tx-md-fixed: 16px
+  --tx-lg-fixed: 18px
+  --tx-xl-fixed: 20px
+  --tx-xxl-fixed: 24px
+
+  /* FLUID (clamp) */
+  --tx-xs-fluid:  clamp(12px, 1.0vw, 12px)
+  --tx-sm-fluid:  clamp(13px, 1.2vw, 14px)
+  --tx-md-fluid:  clamp(12px, 1.6vw, 15px)
+  --tx-lg-fluid:  clamp(16px, 2.0vw, 18px)
+  --tx-xl-fluid:  clamp(17px, 2.4vw, 20px)
+  --tx-xxl-fluid: clamp(17px, 3.2vw, 30px)
+
+  /* По умолчанию используем FLUID-вариант */
+  --tx-xs:  var(--tx-xs-fluid)
+  --tx-sm:  var(--tx-sm-fluid)
+  --tx-md:  var(--tx-md-fluid)
+  --tx-lg:  var(--tx-lg-fluid)
+  --tx-xl:  var(--tx-xl-fluid)
+  --tx-xxl: var(--tx-xxl-fluid)
+
+  /* Тело текста теперь следует шкале обычного текста */
+  --fs-body: var(--tx-md)
+  --fs-caption: 13px

@@ -1,0 +1,188 @@
+services:
+  web:
+    build:
+      context: .
+      args:
+        DEV_UID: ${UID:-1000}
+        DEV_GID: ${GID:-1000}
+    command: bash -c "rm -f tmp/pids/server.pid && bin/rails s -p 3000 -b '0.0.0.0'"
+    volumes:
+      - .:/usr/src/app
+      - bundle:/usr/local/bundle
+      - ./public/uploads:/usr/src/app/public/uploads
+      - ./storage:/usr/src/app/storage
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    environment:
+      - HISTFILE=/usr/src/app/log/.bash_history
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    tty: true
+    stdin_open: true
+    profiles: [ "local" ]
+    networks:
+      - amply-network
+
+  sass:
+    image: ${COMPOSE_PROJECT_NAME:-amply_landing}-web
+    container_name: ${COMPOSE_PROJECT_NAME:-amply_landing}-sass
+    entrypoint: [ ]
+    command: bundle exec rails dartsass:watch
+    depends_on:
+      - web
+    volumes:
+      - .:/usr/src/app
+      - bundle:/usr/local/bundle
+    profiles: [ "local" ]
+    networks:
+      - amply-network
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=${PGUSER:-postgres}
+      - POSTGRES_PASSWORD=${PGPASSWORD}
+      - POSTGRES_DB=${PGDATABASE:-app_development}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-postgres} -d $${POSTGRES_DB:-postgres}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    profiles: [ "prod", "local" ]
+    restart: always
+    networks:
+      - amply-network
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: always
+    profiles: [ "prod", "local" ]
+    networks:
+      - amply-network
+
+  db_dev:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=${PGUSER:-postgres}
+      - POSTGRES_PASSWORD=${PGPASSWORD}
+      - POSTGRES_DB=${PGDATABASE:-app_development}
+    volumes:
+      - pg_data_dev:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-postgres} -d $${POSTGRES_DB:-postgres}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    profiles: [ "dev" ]
+    restart: always
+    networks:
+      - amply-dev-network
+
+  redis_dev:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data_dev:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: always
+    profiles: [ "dev" ]
+    networks:
+      - amply-dev-network
+
+  dev:
+    build:
+      context: .
+      dockerfile: ./develop.Dockerfile
+      args:
+        RAILS_MASTER_KEY: ${RAILS_MASTER_KEY}
+        SECRET_KEY_BASE: ${SECRET_KEY_BASE}
+        APP_VERSION: ${APP_VERSION:-0.0.0+dev}
+        DEV_UID: ${UID:-1000}
+        DEV_GID: ${GID:-1000}
+    volumes:
+      - ./public/uploads:/usr/src/app/public/uploads
+      - ./storage:/usr/src/app/storage
+      - ./log:/usr/src/app/log
+    ports:
+      - "3006:3005"
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - HISTFILE=/usr/src/app/log/.bash_history
+      - APP_VERSION=${APP_VERSION:-0.0.0+dev}
+    depends_on:
+      db_dev:
+        condition: service_healthy
+      redis_dev:
+        condition: service_healthy
+    tty: true
+    stdin_open: true
+    profiles: [ "dev" ]
+    networks:
+      - amply-dev-network
+
+  prod:
+    build:
+      context: .
+      dockerfile: ./production.Dockerfile
+      args:
+        APP_VERSION: ${APP_VERSION}
+        RAILS_MASTER_KEY: ${RAILS_MASTER_KEY}
+        SECRET_KEY_BASE: ${SECRET_KEY_BASE}
+    volumes:
+      - ./public/downloads/scratch:/usr/src/app/public/downloads/scratch
+      - ./public/uploads:/usr/src/app/public/uploads
+      - ./storage:/usr/src/app/storage
+      - ./log:/usr/src/app/log
+    ports:
+      - "3005:3005"
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - HISTFILE=/usr/src/app/log/.bash_history
+      - RAILS_ENV=production
+      - APP_VERSION=${APP_VERSION}
+      - RAILS_MASTER_KEY=${RAILS_MASTER_KEY}
+      - SECRET_KEY_BASE=${SECRET_KEY_BASE}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    profiles: [ "prod" ]
+    networks:
+      - amply-network
+
+volumes:
+  pg_data:
+  redis_data:
+  pg_data_dev:
+  redis_data_dev:
+  bundle:
+
+networks:
+  amply-network:
+  amply-dev-network:

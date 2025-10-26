@@ -1,0 +1,172 @@
+@use "../base/variables"
+@use "../base/mixins" as mix
+
+.hero, .features, .segments
+  display: flex
+  flex-direction: column
+  @include mix.contentCenter
+  gap: 2.125rem
+  padding-top: 12%
+
+  h1, h2, h3, h4, h5, h6
+    text-transform: uppercase
+
+.hero
+  padding-bottom: 12%
+  &__title, &__subtitle
+    @include mix.contentCenter
+    max-width: 88%
+
+.features
+  &__title
+    max-width: 50%
+  &__list
+    display: grid
+    grid-template-columns: repeat(4, minmax(0, 1fr))
+    gap: 3.125rem
+    align-items: stretch
+
+  &__item
+    display: flex
+    flex-direction: column
+    gap: 1.875rem
+    height: 100%
+    min-width: 0
+    position: relative
+
+    &:first-child
+      .features__img__wrapper
+        padding-top: 1.5rem
+    &:nth-child(2)
+      .features__img__wrapper
+        padding-bottom: 2.375rem
+    &:nth-child(3)
+      .features__img__wrapper
+        padding-inline: 0 22.5%
+
+    &:nth-child(4)
+      .features__item--img--group
+        display: flex
+        flex-direction: column
+        position: relative
+        height: 100%
+        .features__img__wrapper
+          position: absolute
+          width: 80%
+          aspect-ratio: 1
+          padding: 0
+          z-index: 1
+          bottom: 0
+          left: 0
+        .features__img__wrapper:nth-child(2)
+          top: 0
+          bottom: initial
+          left: initial
+          right: 0
+          z-index: 0
+
+  &__img__wrapper
+    display: flex
+    align-items: flex-end
+    justify-content: center
+    aspect-ratio: 1
+    padding-inline: 1.5rem
+    border-radius: var(--radius-xl)
+    background-color: var(--color-muted)
+    overflow: hidden
+
+    img
+      width: 100%
+      height: 100%
+      @include mix.unselectable
+
+.segments
+  &__title
+    max-width: 58%
+
+  &__grid
+    display: grid
+    grid-template-columns: 2fr 1fr 1fr
+    gap: 1.25rem
+    align-items: stretch
+
+  &__card
+    display: flex
+    flex-direction: column
+    justify-content: flex-start
+    gap: 1.25rem
+    height: 100%
+    min-width: 0
+    padding: 1.25rem
+    background: var(--color-muted)
+    border-radius: var(--radius-xl)
+
+    &:first-child
+      aspect-ratio: 4 / 3
+      .segments__card-text
+        max-width: 40%
+
+    &-icon
+      inline-size: 56px
+      block-size: 56px
+      object-fit: contain
+      display: block
+    &--description
+      display: flex
+      flex-direction: column
+      gap: clamp(.375rem, .5vw, 1rem)
+      margin-top: auto
+
+
+    &-title, &-text
+      display: flex
+      justify-content: flex-start
+      text-align: left
+      height: fit-content
+
+.waitlist
+  display: flex
+  flex-direction: column
+  @include mix.contentCenter
+  gap: 3.125rem
+  padding-block: 12%
+
+@media (max-width: 1023px)
+  .features, .segments, .waitlist
+    .t-h2
+      max-width: 100%
+
+  .features
+    &__list
+      display: flex
+      flex-wrap: wrap
+      gap: 1.5rem
+
+    &__item
+      flex: 0 0 calc(50% - 1.5rem)
+      height: auto
+      align-self: stretch
+
+      .features__caption
+        max-width: 80%
+        margin: 0 auto
+
+      &:nth-child(4)
+        .features__item--img--group
+          position: static
+        .features__img__wrapper:first-child
+          position: relative
+          margin-top: auto
+
+  .segments
+    &__grid
+      grid-template-columns: 1fr
+      gap: 1.875rem
+      width: 100%
+
+    &__card
+      flex-direction: row
+    &__card:first-child
+      aspect-ratio: initial
+      .segments__card-text
+        max-width: 160px

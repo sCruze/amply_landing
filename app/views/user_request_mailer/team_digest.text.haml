@@ -1,0 +1,17 @@
+| New waitlist signup
+|
+| Name: #{@user_request.name}
+| Email: #{@user_request.email}
+- if @user_request.respond_to?(:created_at) && @user_request.created_at.present?
+  | Created at: #{I18n.l(@user_request.created_at, format: :long)}
+|
+| Snapshot:
+| - Total signups: #{@total_count}
+| - Signups last 7 days: #{@weekly_count}
+|
+- if @recent.present?
+  | Recent (last 5):
+  - @recent.each do |r|
+    | - #{r.name} <#{r.email}> (#{r.created_at ? I18n.l(r.created_at, format: :short) : "-"})
+|
+| You received this message because you’re on the internal notification list.

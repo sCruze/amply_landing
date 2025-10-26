@@ -1,0 +1,34 @@
+%div{id: id, class: [modal_classes, "ui-modal"], data: data}
+  .ui-modal__backdrop{ data: { action: "click->modal#close" } }
+  .ui-modal__dialog{ class: dialog_classes, data: { modal_target: "dialog" } }
+    - if header_layout != :none
+      %header.ui-modal__header
+        - if header_layout == :row
+          .ui-modal__header__row
+            - if title.present?
+              %h2.ui-modal__title= title
+            = header_row if header_row
+            %span.ui-modal__close.modal__close{ data: { action: "click.stop->modal#close" } }
+
+        - elsif header_layout == :split
+          .ui-modal__header
+            - if header_top
+              #modal__header__top.ui-modal__header__top
+                = header_top
+            %span.ui-modal__close{ data: { action: "click.stop->modal#close" } }
+
+          - if header_bottom
+            #modal__header__bottom.ui-modal__header__bottom
+              = header_bottom
+    - else
+      %span.ui-modal__close{ data: { action: "click.stop->modal#close" } }
+
+    .ui-modal__body
+      - if body
+        = body
+      - else
+        = content
+
+    - if footer
+      .ui-modal__footer
+        = footer

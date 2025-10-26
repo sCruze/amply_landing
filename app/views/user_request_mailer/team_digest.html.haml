@@ -1,0 +1,58 @@
+- content_for :title, "New waitlist signup"
+
+.brand{ style: "text-align:center; margin:0 0 16px;" }
+  %table{ role: "presentation", cellpadding: "0", cellspacing: "0", border: "0" }
+    %tr
+      %td{ style: "padding:0 8px 0 0; vertical-align:middle;" }
+        = image_tag "cid:amply-logo",
+                    alt: "Amply logo",
+                    width: 24,
+                    height: 24,
+                    style: "display:block; border:0; outline:0; text-decoration:none; border-radius:6px;"
+      %td{ style: "vertical-align:middle; font-weight:700; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; font-size:16px; line-height:1;" }
+        Amply
+
+%h1 New waitlist signup
+
+%p
+  #{@user_request.name.presence || "Someone"} joined the waitlist.
+  We’ll include quick stats below.
+
+%table{ style: "width:100%; border-collapse:collapse; margin: 8px 0 16px; font-size:15px;" }
+  %tr
+    %td{ style: "padding:8px 0; width:140px; color:#6b7280;" } Name
+    %td{ style: "padding:8px 0;" }= @user_request.name
+  %tr
+    %td{ style: "padding:8px 0; color:#6b7280;" } Email
+    %td{ style: "padding:8px 0;" }= @user_request.email
+  - if @user_request.respond_to?(:created_at)
+    %tr
+      %td{ style: "padding:8px 0; color:#6b7280;" } Created at
+      %td{ style: "padding:8px 0;" }= I18n.l(@user_request.created_at, format: :long)
+
+%hr{ style: "border:none; border-top:1px solid #e5e7eb; margin:12px 0;" }
+
+%h2{ style: "font-size:18px; margin: 0 0 8px;" } Snapshot
+%table{ style: "width:100%; border-collapse:collapse; margin: 8px 0 16px; font-size:15px;" }
+  %tr
+    %td{ style: "padding:6px 0; width:180px; color:#6b7280;" } Total signups
+    %td{ style: "padding:6px 0;" }= @total_count
+  %tr
+    %td{ style: "padding:6px 0; color:#6b7280;" } Signups last 7 days
+    %td{ style: "padding:6px 0;" }= @weekly_count
+
+- if @recent.present?
+  %h3{ style: "font-size:16px; margin: 12px 0 6px;" } Recent (last 5)
+  %table{ style: "width:100%; border-collapse:collapse; margin:0 0 8px; font-size:14px;" }
+    %tr
+      %th{ style: "text-align:left; padding:6px 0; color:#6b7280; font-weight:600;" } Name
+      %th{ style: "text-align:left; padding:6px 0; color:#6b7280; font-weight:600;" } Email
+      %th{ style: "text-align:left; padding:6px 0; color:#6b7280; font-weight:600;" } Date
+    - @recent.each do |r|
+      %tr
+        %td{ style: "padding:6px 0;" }= r.name
+        %td{ style: "padding:6px 0;" }= r.email
+        %td{ style: "padding:6px 0;" }= r.created_at ? I18n.l(r.created_at, format: :short) : "-"
+
+%p.muted
+  You received this message because you’re on the internal notification list.

@@ -1,0 +1,138 @@
+@use "../base/variables"
+@use "../base/mixins" as mix
+
+@layer utilities
+  /* ===== базовые ===== */
+  .u-font
+    @include mix.text-body
+
+  .u-text-muted, .text-muted
+    color: var(--color-muted)
+
+  /* ===== НОВЫЕ: утилиты для обычного текста (fluid по умолчанию) ===== */
+  /* размеры */
+  .text-xs
+    font-size: var(--tx-xs)
+    line-height: var(--leading-normal)
+
+  .text-sm
+    font-size: var(--tx-sm)
+    line-height: var(--leading-normal)
+
+  .text-md
+    font-size: var(--tx-md)
+    line-height: var(--leading-normal)
+
+  .text-lg
+    font-size: var(--tx-lg)
+    line-height: var(--leading-normal)
+
+  .text-xl
+    font-size: var(--tx-xl)
+    line-height: var(--leading-normal)
+
+  .text-xxl
+    font-size: var(--tx-xxl)
+    line-height: var(--leading-relaxed)
+
+  /* веса */
+  .text-regular
+    font-weight: var(--weight-regular)
+  .text-medium
+    font-weight: var(--weight-medium)
+  .text-semibold
+    font-weight: var(--weight-semibold)
+  .text-bold
+    font-weight: var(--weight-bold)
+
+  /* лидинг */
+  .leading-tight
+    line-height: var(--leading-tight)
+  .leading-normal
+    line-height: var(--leading-normal)
+  .leading-relaxed
+    line-height: var(--leading-relaxed)
+
+  /* выравнивание */
+  .text-left
+    text-align: left
+  .text-center
+    text-align: center
+  .text-right
+    text-align: right
+
+  /* переключатели режима размеров */
+  .text--fixed
+    --tx-xs:  var(--tx-xs-fixed)
+    --tx-sm:  var(--tx-sm-fixed)
+    --tx-md:  var(--tx-md-fixed)
+    --tx-lg:  var(--tx-lg-fixed)
+    --tx-xl:  var(--tx-xl-fixed)
+    --tx-xxl: var(--tx-xxl-fixed)
+
+  .text--fluid
+    --tx-xs:  var(--tx-xs-fluid)
+    --tx-sm:  var(--tx-sm-fluid)
+    --tx-md:  var(--tx-md-fluid)
+    --tx-lg:  var(--tx-lg-fluid)
+    --tx-xl:  var(--tx-xl-fluid)
+    --tx-xxl: var(--tx-xxl-fluid)
+
+  /* ===== СТАРЫЕ: переведены на токены (можно пометить как deprecated) ===== */
+  /* были фиксированные — теперь через шкалу */
+  .t-text-15
+    @include mix.text(var(--tx-sm), var(--leading-normal), var(--weight-medium))
+    font-size: var(--tx-sm)
+    color: var(--neutral-color-neutral-500, #B2B2B2)
+    text-align: center
+
+  .t-text-17
+    @include mix.text(var(--tx-md), var(--leading-normal), var(--weight-medium))
+    font-size: var(--tx-md)
+    color: var(--neutral-color-neutral-900, #2B2B2B)
+
+  .t-text-20
+    @include mix.text(var(--tx-lg), var(--leading-normal), var(--weight-medium))
+    font-size: var(--tx-lg)
+    color: #000
+    text-align: center
+
+  /* заголовки: оставляем миксины, но задаём размер из токенов заголовков */
+  .t-display
+    @include mix.text-title(0)
+    font-size: var(--fs-display)
+
+  .t-h1
+    @include mix.text-title(1)
+    font-size: var(--fs-h1)
+
+  .t-h2
+    @include mix.text-title(2)
+    font-size: var(--fs-h2)
+
+  .t-h3
+    @include mix.text-title(3)
+    font-size: var(--fs-h3)
+
+  .t-btn-lg
+    @include mix.text-title(0)
+
+  .t-subtitle
+    @include mix.text(var(--fs-sub), var(--leading-normal), var(--weight-medium))
+    font-size: var(--fs-sub)
+
+  .t-body
+    @include mix.text-body()
+    font-size: var(--fs-body)
+    line-height: var(--leading-normal)
+
+  .t-caption
+    @include mix.text(var(--fs-caption), 1.3, var(--weight-regular))
+    font-size: var(--fs-caption)
+    color: var(--color-muted)
+
+  /* ===== отступы ===== *
+  .mt-24
+    margin-top: 24px
+  .mt-40
+    margin-top: 40px

@@ -1,0 +1,20 @@
+@use "layout/container"
+
+
+@layer layout
+  .l-page
+    display: flex
+    flex-direction: column
+    min-height: 100dvh
+    height: fit-content
+    background: var(--color-bg)
+    color: var(--color-fg)
+
+  .l-page__header
+    flex: 0 0 auto
+  .l-page__main
+    flex: 1 0 auto
+    display: block
+  .l-page__footer
+    flex: 0 0 auto
+

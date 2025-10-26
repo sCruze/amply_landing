@@ -1,0 +1,73 @@
+@layer layout
+  :root
+    --container-gutter-xs: 16px
+    --container-gutter-sm: 20px
+    --container-gutter-md: 24px
+    --container-gutter-lg: 32px
+    --container-gutter-xl: 40px
+
+  $bp-sm: 576px
+  $bp-md: 768px
+  $bp-lg: 992px
+  $bp-xl: 1200px
+  $bp-xxl: 1440px
+
+  $max-sm: 540px
+  $max-md: 720px
+  $max-lg: 960px
+  $max-xl: 1140px
+  $max-xxl: 1320px
+  // при ≥1440px
+
+  .container
+    width: 100%
+    margin-inline: auto
+    padding-inline: var(--container-gutter-xs)
+
+    @media (min-width: $bp-sm)
+      padding-inline: var(--container-gutter-sm)
+    @media (min-width: $bp-md)
+      padding-inline: var(--container-gutter-md)
+    @media (min-width: $bp-lg)
+      padding-inline: var(--container-gutter-lg)
+    @media (min-width: $bp-xl)
+      padding-inline: var(--container-gutter-xl)
+
+    @media (min-width: $bp-sm)
+      max-width: $max-sm
+    @media (min-width: $bp-md)
+      max-width: $max-md
+    @media (min-width: $bp-lg)
+      max-width: $max-lg
+    @media (min-width: $bp-xl)
+      max-width: $max-xl
+    @media (min-width: $bp-xxl)
+      max-width: $max-xxl
+
+  .container-fluid
+    width: 100%
+    margin-inline: 0
+    padding-inline: var(--container-gutter-xs)
+    @media (min-width: $bp-sm)
+      padding-inline: var(--container-gutter-sm)
+    @media (min-width: $bp-md)
+      padding-inline: var(--container-gutter-md)
+    @media (min-width: $bp-lg)
+      padding-inline: var(--container-gutter-lg)
+    @media (min-width: $bp-xl)
+      padding-inline: var(--container-gutter-xl)
+
+  .container-narrow
+    @extend .container
+    @media (min-width: $bp-md)
+      max-width: 720px
+    @media (min-width: $bp-lg)
+      max-width: 800px
+    @media (min-width: $bp-xl)
+      max-width: 880px
+    @media (min-width: $bp-xxl)
+      max-width: 920px
+
+  .container-bleed
+    margin-inline: calc(50% - 50vw)
+    width: 100vw

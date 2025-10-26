@@ -1,0 +1,65 @@
+$ease: cubic-bezier(.22, .61, .36, 1)
+[data-controller~="reveal"] [data-reveal-target="item"]
+  --reveal-duration: 700ms
+  --reveal-delay: 0ms
+  --reveal-rise-vh: 30px
+  --reveal-offset-x: 0px
+  --reveal-scale: .98
+  --reveal-rotate: 0deg
+  opacity: 0 !important
+  transform: translate(var(--reveal-offset-x), var(--reveal-rise-vh)) scale(var(--reveal-scale)) rotate(var(--reveal-rotate)) !important
+  will-change: opacity, transform
+  transition-property: opacity, transform
+  transition-duration: var(--reveal-duration)
+  transition-timing-function: $ease
+  transition-delay: var(--reveal-delay)
+[data-controller~="reveal"] [data-reveal-target="item"].is-visible
+  opacity: 1 !important
+  transform: translate(0, 0) scale(1) rotate(0) !important
+  will-change: auto
+.reveal--rise
+  --reveal-rise-vh: 24vh
+  --reveal-scale: .965
+.reveal--slide-up
+  --reveal-rise-vh: 48px
+  --reveal-scale: .985
+.reveal--left
+  --reveal-offset-x: -36px
+  --reveal-rise-vh: 28px
+.reveal--right
+  --reveal-offset-x: 36px
+  --reveal-rise-vh: 28px
+.reveal--zoom
+  --reveal-scale: .94
+  --reveal-rise-vh: 24px
+.reveal--pop
+  --reveal-scale: .92
+  --reveal-rise-vh: 20px
+.reveal--tilt
+  --reveal-rotate: -2.5deg
+  --reveal-rise-vh: 32px
+.reveal--tight
+  --reveal-rise-vh: 22px
+  --reveal-scale: .99
+.reveal--swoop-left
+  --reveal-offset-x: -12vw
+  --reveal-rise-vh: 14vh
+  --reveal-scale: .94
+  --reveal-rotate: -3deg
+.reveal--swoop-right
+  --reveal-offset-x: 12vw
+  --reveal-rise-vh: 14vh
+  --reveal-scale: .94
+  --reveal-rotate: 3deg
+.reveal--lift-deep
+  --reveal-rise-vh: 18vh
+  --reveal-scale: .96
+.reveal--caption
+  --reveal-rise-vh: 20px
+  --reveal-scale: .995
+@media (prefers-reduced-motion: reduce)
+  [data-controller~="reveal"] [data-reveal-target="item"],
+  [data-controller~="reveal"] [data-reveal-target="item"].is-visible
+    transition: none !important
+    opacity: 1 !important
+    transform: none !important
