@@ -152,7 +152,6 @@ services:
         RAILS_MASTER_KEY: ${RAILS_MASTER_KEY}
         SECRET_KEY_BASE: ${SECRET_KEY_BASE}
     volumes:
-      - ./public/downloads/scratch:/usr/src/app/public/downloads/scratch
       - ./public/uploads:/usr/src/app/public/uploads
       - ./storage:/usr/src/app/storage
       - ./log:/usr/src/app/log
