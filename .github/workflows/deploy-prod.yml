@@ -2,7 +2,7 @@ name: Deploy (prod)
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   workflow_dispatch:
 
 jobs:
@@ -31,12 +31,11 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_KEY_PROD }}
 
-      - name: Trust host (port-aware)
+      - name: Trust host
         run: |
           mkdir -p ~/.ssh
           ssh-keyscan -p "${{ secrets.SSH_PORT }}" "${{ secrets.SSH_HOST_PROD }}" >> ~/.ssh/known_hosts
 
-      # ======= Upload code to ~/amply_landing without sudo =======
       - name: Upload project (rsync if available, else tar over SSH)
         env:
           SSH_USER: ${{ secrets.SSH_USER }}
@@ -45,11 +44,7 @@ jobs:
         run: |
           set -euo pipefail
           REMOTE_DIR="~/amply_landing"
-
-          # Ensure directory (no sudo needed in HOME)
           ssh -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" "mkdir -p $REMOTE_DIR"
-
-          # Prefer rsync if present on the server
           if ssh -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" "command -v rsync >/dev/null 2>&1"; then
             rsync -az --delete -e "ssh -p $SSH_PORT" \
               --exclude '.git' \
@@ -57,7 +52,6 @@ jobs:
               --exclude 'tmp' \
               ./ "$SSH_USER@$SSH_HOST:$REMOTE_DIR/"
           else
-            # Fallback: tar over SSH (no rsync required on server)
             tar -czf - \
               --exclude='.git' \
               --exclude='.github' \
@@ -91,41 +85,45 @@ jobs:
           set -euo pipefail
           cd ~/amply_landing
           cat > .env <<'EENV'
-                              RAILS_ENV=production
-                              APP_HOST=${APP_HOST:-localhost}
-                              APP_PROTOCOL=https
-                              APP_PORT=443
-                              
-                              # Postgres (compose network)
-                              PGHOST=db
-                              PGUSER=postgres
-                              PGPASSWORD=${PGPASSWORD_PROD:-}
-                              PGDATABASE=amply_production
-                              
-                              # Redis
-                              REDIS_URL=redis://redis:6379/1
-                              
-                              # Rails secrets
-                              RAILS_MASTER_KEY=${RAILS_MASTER_KEY:-}
-                              SECRET_KEY_BASE=${SECRET_KEY_BASE:-}
-                              
-                              # Mailer (optional)
-                              MAIL_FROM=${MAIL_FROM:-}
-                              MAIL_FALLBACK_TO=${MAIL_FALLBACK_TO:-}
-                              SMTP_ADDRESS=${SMTP_ADDRESS:-}
-                              SMTP_PORT=${SMTP_PORT:-}
-                              SMTP_DOMAIN=${SMTP_DOMAIN:-}
-                              SMTP_USER_NAME=${SMTP_USER_NAME:-}
-                              SMTP_PASSWORD=${SMTP_PASSWORD:-}
-                              SMTP_AUTHENTICATION=${SMTP_AUTHENTICATION:-plain}
-                              SMTP_ENABLE_STARTTLS_AUTO=${SMTP_ENABLE_STARTTLS_AUTO:-true}
-                              SMTP_TLS=${SMTP_TLS:-true}
-                              WAITLIST_NOTIFY_RECIPIENTS=${WAITLIST_NOTIFY_RECIPIENTS:-}
-                              
-                              # Build version
-                              APP_VERSION=${{ steps.ver.outputs.version }}
-                              EENV
-                              REMOTE
+          RAILS_ENV=production
+          APP_HOST=${APP_HOST:-localhost}
+          APP_PROTOCOL=https
+          APP_PORT=443
+          
+          PGHOST=db
+          PGUSER=postgres
+          PGPASSWORD=${PGPASSWORD_PROD:-}
+          PGDATABASE=amply_production
+          
+          REDIS_URL=redis://redis:6379/1
+          
+          RAILS_MASTER_KEY=${RAILS_MASTER_KEY:-}
+          SECRET_KEY_BASE=${SECRET_KEY_BASE:-}
+          
+          MAIL_FROM=${MAIL_FROM:-}
+          MAIL_FALLBACK_TO=${MAIL_FALLBACK_TO:-}
+          SMTP_ADDRESS=${SMTP_ADDRESS:-}
+          SMTP_PORT=${SMTP_PORT:-}
+          SMTP_DOMAIN=${SMTP_DOMAIN:-}
+          SMTP_USER_NAME=${SMTP_USER_NAME:-}
+          SMTP_PASSWORD=${SMTP_PASSWORD:-}
+          SMTP_AUTHENTICATION=${SMTP_AUTHENTICATION:-plain}
+          SMTP_ENABLE_STARTTLS_AUTO=${SMTP_ENABLE_STARTTLS_AUTO:-true}
+          SMTP_TLS=${SMTP_TLS:-true}
+          WAITLIST_NOTIFY_RECIPIENTS=${WAITLIST_NOTIFY_RECIPIENTS:-}
+          
+          APP_VERSION=@APP_VERSION@
+          EENV
+          REMOTE
+      - name: Inject APP_VERSION into .env (server-side)
+        env:
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_HOST: ${{ secrets.SSH_HOST_PROD }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          APP_VERSION: ${{ steps.ver.outputs.version }}
+        run: |
+          set -euo pipefail
+          ssh -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" "sed -i 's/@APP_VERSION@/${APP_VERSION}/g' ~/amply_landing/.env"
 
       - name: Build & Up (Docker Compose, prod)
         env:
@@ -141,11 +139,12 @@ jobs:
           set -euo pipefail
           cd ~/amply_landing
           docker compose --profile prod build \
-            --build-arg APP_VERSION=${APP_VERSION} \
-            --build-arg RAILS_MASTER_KEY=${RAILS_MASTER_KEY} \
-            --build-arg SECRET_KEY_BASE=${SECRET_KEY_BASE}
+            --build-arg APP_VERSION="${APP_VERSION}" \
+            --build-arg RAILS_MASTER_KEY="${RAILS_MASTER_KEY}" \
+            --build-arg SECRET_KEY_BASE="${SECRET_KEY_BASE}"
           docker compose --profile prod up -d --force-recreate
           REMOTE
+        shell: bash
 
       - name: DB prepare (create + migrate)
         env:
@@ -159,6 +158,7 @@ jobs:
           cd ~/amply_landing
           docker compose run --rm prod rails db:prepare
           REMOTE
+        shell: bash
 
       - name: Cleanup old images (optional)
         env:
