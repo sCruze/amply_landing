@@ -15,17 +15,8 @@ ENV RAILS_ENV=production \
 
 RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y \
-      build-essential \
-      pkg-config \
-      git \
-      curl \
-      libyaml-dev \
-      libpq-dev \
-      postgresql-client \
-      libvips \
-      imagemagick \
-      file \
-      protobuf-compiler libprotobuf-dev cmake \
+      build-essential pkg-config git curl libyaml-dev libpq-dev postgresql-client \
+      libvips imagemagick file protobuf-compiler libprotobuf-dev cmake \
     && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives
 
 RUN gem update --system && gem install bundler
@@ -33,10 +24,12 @@ RUN gem update --system && gem install bundler
 ARG DEV_UID=1000
 ARG DEV_GID=1000
 RUN groupadd --gid ${DEV_GID} app && \
-    useradd  --uid ${DEV_UID} --gid ${DEV_GID} --create-home --shell /bin/bash app && \
+    useradd --uid ${DEV_UID} --gid ${DEV_GID} --create-home --shell /bin/bash app && \
     mkdir -p /usr/local/bundle && chown -R ${DEV_UID}:${DEV_GID} /usr/local/bundle
 
 WORKDIR /usr/src/app
+RUN chown -R ${DEV_UID}:${DEV_GID} /usr/src/app
+
 USER ${DEV_UID}:${DEV_GID}
 
 COPY --chown=${DEV_UID}:${DEV_GID} Gemfile Gemfile.lock ./
@@ -50,9 +43,8 @@ RUN bundle config set --local without "${BUNDLE_WITHOUT}" \
 
 COPY --chown=${DEV_UID}:${DEV_GID} . .
 
-RUN install -d -m 0775 -o ${DEV_UID} -g ${DEV_GID} \
-      tmp tmp/pids tmp/sockets tmp/cache log storage \
-  && chmod -R 0775 tmp log storage
+RUN mkdir -p tmp tmp/pids tmp/sockets tmp/cache log storage \
+ && chmod -R 0775 tmp log storage
 
 ARG RAILS_MASTER_KEY
 ARG SECRET_KEY_BASE
