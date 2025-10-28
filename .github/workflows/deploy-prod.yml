@@ -112,18 +112,8 @@ jobs:
           SMTP_TLS=${SMTP_TLS:-true}
           WAITLIST_NOTIFY_RECIPIENTS=${WAITLIST_NOTIFY_RECIPIENTS:-}
           
-          APP_VERSION=@APP_VERSION@
           EENV
           REMOTE
-      - name: Inject APP_VERSION into .env (server-side)
-        env:
-          SSH_USER: ${{ secrets.SSH_USER }}
-          SSH_HOST: ${{ secrets.SSH_HOST_PROD }}
-          SSH_PORT: ${{ secrets.SSH_PORT }}
-          APP_VERSION: ${{ steps.ver.outputs.version }}
-        run: |
-          set -euo pipefail
-          ssh -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" "sed -i 's/@APP_VERSION@/${APP_VERSION}/g' ~/amply_landing/.env"
 
       - name: Build & Up (Docker Compose, prod)
         env:
@@ -132,14 +122,12 @@ jobs:
           SSH_PORT: ${{ secrets.SSH_PORT }}
           RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
           SECRET_KEY_BASE: ${{ secrets.SECRET_KEY_BASE }}
-          APP_VERSION: ${{ steps.ver.outputs.version }}
         run: |
           set -euo pipefail
           ssh -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" 'bash -s' <<'REMOTE'
           set -euo pipefail
           cd ~/amply_landing
           docker compose --profile prod build \
-            --build-arg APP_VERSION="${APP_VERSION}" \
             --build-arg RAILS_MASTER_KEY="${RAILS_MASTER_KEY}" \
             --build-arg SECRET_KEY_BASE="${SECRET_KEY_BASE}"
           docker compose --profile prod up -d --force-recreate
