@@ -81,7 +81,7 @@ jobs:
               
               # Rails secrets
               RAILS_MASTER_KEY=${{ secrets.RAILS_MASTER_KEY }}
-              SECRET_KEY_BASE=${{ secrets.SECRET_KEY_BASE }}
+              SECRET_KEY_BASE=${{ secrets.SECRET_KEY_BASE_PROD }}
               
               # Mailer (optional)
               MAIL_FROM=${{ secrets.MAIL_FROM }}
@@ -109,7 +109,7 @@ jobs:
             docker compose --profile prod build \
               --build-arg APP_VERSION="${{ steps.ver.outputs.version }}" \
               --build-arg RAILS_MASTER_KEY="${{ secrets.RAILS_MASTER_KEY }}" \
-              --build-arg SECRET_KEY_BASE="${{ secrets.SECRET_KEY_BASE }}"
+              --build-arg SECRET_KEY_BASE="${{ secrets.SECRET_KEY_BASE_PROD }}"
             docker compose --profile prod up -d --force-recreate
           '
 
