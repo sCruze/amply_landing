@@ -46,16 +46,25 @@ jobs:
           REMOTE_DIR="~/amply_landing"
           ssh -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" "mkdir -p $REMOTE_DIR"
           if ssh -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" "command -v rsync >/dev/null 2>&1"; then
-            rsync -az --delete -e "ssh -p $SSH_PORT" \
+            rsync -az --delete --omit-dir-times --no-perms --no-owner --no-group \
+              -e "ssh -p $SSH_PORT" \
               --exclude '.git' \
               --exclude '.github' \
               --exclude 'tmp' \
+              --exclude 'log' \
+              --exclude 'storage' \
+              --exclude 'public/uploads' \
+              --exclude 'public/downloads' \
               ./ "$SSH_USER@$SSH_HOST:$REMOTE_DIR/"
           else
             tar -czf - \
               --exclude='.git' \
               --exclude='.github' \
               --exclude='tmp' \
+              --exclude='log' \
+              --exclude='storage' \
+              --exclude='public/uploads' \
+              --exclude='public/downloads' \
               . | ssh -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" "tar -xzf - -C $REMOTE_DIR"
           fi
 
@@ -64,26 +73,22 @@ jobs:
           ssh -p "${{ secrets.SSH_PORT }}" "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST_PROD }}" bash -lc '
             set -eo pipefail
             cd ~/amply_landing
-            cat > .env <<EOF
+            cat > .env <<'EOF'
               RAILS_ENV=production
               APP_HOST=${{ secrets.APP_DOMAIN_PROD }}
               APP_PROTOCOL=https
               APP_PORT=443
               
-              # Postgres (compose network)
               PGHOST=db
               PGUSER=postgres
               PGPASSWORD=${{ secrets.PGPASSWORD_PROD }}
               PGDATABASE=amply_production
               
-              # Redis
               REDIS_URL=redis://redis:6379/1
               
-              # Rails secrets
               RAILS_MASTER_KEY=${{ secrets.RAILS_MASTER_KEY }}
               SECRET_KEY_BASE=${{ secrets.SECRET_KEY_BASE_PROD }}
               
-              # Mailer (optional)
               MAIL_FROM=${{ secrets.MAIL_FROM }}
               MAIL_FALLBACK_TO=${{ secrets.MAIL_FALLBACK_TO }}
               SMTP_ADDRESS=${{ secrets.SMTP_ADDRESS }}
@@ -96,10 +101,9 @@ jobs:
               SMTP_TLS=${{ secrets.SMTP_TLS }}
               WAITLIST_NOTIFY_RECIPIENTS=${{ secrets.WAITLIST_NOTIFY_RECIPIENTS }}
               
-              # Build version
               APP_VERSION=${{ steps.ver.outputs.version }}
             EOF
-          '
+            '
 
       - name: Build & Up (Docker Compose, prod)
         run: |
@@ -113,12 +117,30 @@ jobs:
             docker compose --profile prod up -d --force-recreate
           '
 
+      - name: Wait for DB healthy
+        run: |
+          ssh -p "${{ secrets.SSH_PORT }}" "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST_PROD }}" bash -lc '
+            set -eo pipefail
+            cd ~/amply_landing
+            echo "Waiting for db to be (healthy)..."
+            for i in {1..60}; do
+              if docker compose --profile prod ps db | grep -q "(healthy)"; then
+                echo "DB is healthy."
+                exit 0
+              fi
+              sleep 2
+            done
+            echo "DB did not become healthy in time" >&2
+            docker compose --profile prod ps
+            exit 1
+          '
+
       - name: DB prepare (create + migrate)
         run: |
           ssh -p "${{ secrets.SSH_PORT }}" "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST_PROD }}" bash -lc '
             set -eo pipefail
             cd ~/amply_landing
-            docker compose run --rm prod rails db:prepare
+            docker compose --profile prod run --rm prod rails db:prepare
           '
 
       - name: Cleanup old images (optional)
