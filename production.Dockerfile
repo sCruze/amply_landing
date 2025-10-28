@@ -57,16 +57,21 @@ RUN bundle config set --local without "${BUNDLE_WITHOUT}" \
 # Копируем остальной код (тоже с правильными правами)
 COPY --chown=${DEV_UID}:${DEV_GID} . .
 
-# Передаём секреты как ARG/ENV (для сборочных задач вроде assets)
+# Готовим директории, в которые Rails пишет во время работы
+RUN install -d -m 0775 -o ${DEV_UID} -g ${DEV_GID} \
+      tmp tmp/pids tmp/sockets tmp/cache log storage \
+  && chmod -R 0775 tmp log storage
+
+# Передаём секреты как ARG/ENV (используются на build-этапе для задач типа сборки ассетов)
 ARG RAILS_MASTER_KEY
 ARG SECRET_KEY_BASE
 ENV RAILS_MASTER_KEY=${RAILS_MASTER_KEY} \
     SECRET_KEY_BASE=${SECRET_KEY_BASE}
 
-# Сборка фронтовых ассетов (если используешь dartsass)
-RUN bundle exec rails dartsass:build
+# Сборка фронтовых ассетов (если SECRET_KEY_BASE не пришёл — подставим временный)
+RUN /bin/bash -lc 'SECRET_KEY_BASE="${SECRET_KEY_BASE:-dummy_build_key}" bundle exec rails dartsass:build'
 
-# Экспонируем прод-порт (подгони под свой Nginx upstream)
+# Экспонируем прод-порт (под твой Nginx upstream)
 ENV PORT=3000
 EXPOSE 3000
 
