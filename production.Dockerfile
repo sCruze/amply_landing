@@ -6,6 +6,7 @@ ENV RAILS_ENV=production \
     RACK_ENV=production \
     LANG=C.UTF-8 \
     RAILS_LOG_TO_STDOUT=1 \
+    RAILS_SERVE_STATIC_FILES=1 \
     BUNDLE_PATH=/usr/local/bundle \
     BUNDLE_WITHOUT="development test" \
     BUNDLE_JOBS=4 \
@@ -29,11 +30,9 @@ RUN groupadd --gid ${DEV_GID} app && \
 
 WORKDIR /usr/src/app
 RUN chown -R ${DEV_UID}:${DEV_GID} /usr/src/app
-
 USER ${DEV_UID}:${DEV_GID}
 
 COPY --chown=${DEV_UID}:${DEV_GID} Gemfile Gemfile.lock ./
-
 RUN bundle config set --local without "${BUNDLE_WITHOUT}" \
  && bundle config set --local path "${BUNDLE_PATH}" \
  && bundle config set --local deployment "true" \
@@ -53,7 +52,10 @@ ENV RAILS_MASTER_KEY=${RAILS_MASTER_KEY} \
 
 RUN /bin/bash -lc 'SECRET_KEY_BASE="${SECRET_KEY_BASE:-dummy_build_key}" bundle exec rails dartsass:build'
 
+RUN /bin/bash -lc 'RAILS_ENV=production SECRET_KEY_BASE="${SECRET_KEY_BASE:-dummy_build_key}" bundle exec rails assets:precompile' \
+ && /bin/bash -lc 'bundle exec rails assets:clean'
+
 ENV PORT=3000
 EXPOSE 3000
 
-ENTRYPOINT ["/bin/bash", "-lc", "bundle exec rails db:prepare || true; exec bundle exec rails server -b 0.0.0.0 -p ${PORT}"]
+ENTRYPOINT ["/bin/bash", "-lc", "exec bundle exec rails server -b 0.0.0.0 -p ${PORT}"]
