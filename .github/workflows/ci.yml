@@ -32,12 +32,12 @@ jobs:
       - name: Add SSH key
         uses: webfactory/ssh-agent@v0.9.0
         with:
-          ssh-private-key: ${{ secrets.SSH_KEY }}
+          ssh-private-key: ${{ secrets.SSH_KEY_PROD }}
 
       - name: Trust host
         run: |
           mkdir -p ~/.ssh
-          ssh-keyscan -p "${{ secrets.SSH_PORT }}" "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts
+          ssh-keyscan -p "${{ secrets.SSH_PORT }}" "${{ secrets.SSH_HOST_PROD }}" >> ~/.ssh/known_hosts
 
       - name: Rsync project to server
         run: |
@@ -45,39 +45,53 @@ jobs:
             --exclude '.git' \
             --exclude '.github' \
             --exclude 'tmp' \
-            . "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/var/www/amply_landing"
+            . "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST_PROD }}:/var/www/amply_landing"
 
       - name: Write .env on server
         run: |
-          ssh -p "${{ secrets.SSH_PORT }}" "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" bash -lc '
+          ssh -p "${{ secrets.SSH_PORT }}" "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST_PROD }}" bash -lc '
             set -euo pipefail
             cd /var/www/amply_landing
             cat > .env <<EOF
-                            RAILS_ENV=production
-                            APP_HOST=${{ secrets.APP_DOMAIN || 'localhost' }}
-                            APP_PROTOCOL=https
-                            APP_PORT=443
-                            
-                            # DB
-                            PGHOST=db
-                            PGUSER=postgres
-                            PGPASSWORD=${{ secrets.PGPASSWORD_PROD }}
-                            PGDATABASE=app_production
-                            
-                            # Redis
-                            REDIS_URL=redis://redis:6379/1
-                            
-                            # Secrets
-                            RAILS_MASTER_KEY=${{ secrets.RAILS_MASTER_KEY }}
-                            SECRET_KEY_BASE=${{ secrets.SECRET_KEY_BASE }}
-                            
-                            # Version
-                            APP_VERSION=${{ steps.ver.outputs.version }}
-                            EOF'
+                              RAILS_ENV=production
+                              APP_HOST=${{ secrets.APP_DOMAIN_PROD || vars.APP_DOMAIN_PROD || 'localhost' }}
+                              APP_PROTOCOL=https
+                              APP_PORT=443
+                        
+                              # Postgres (контейнер db + сеть compose)
+                              PGHOST=db
+                              PGUSER=postgres
+                              PGPASSWORD=${{ secrets.PGPASSWORD_PROD }}
+                              PGDATABASE=amply_production
+                        
+                              # Redis
+                              REDIS_URL=redis://redis:6379/1
+                        
+                              # Rails secrets
+                              RAILS_MASTER_KEY=${{ secrets.RAILS_MASTER_KEY }}
+                              SECRET_KEY_BASE=${{ secrets.SECRET_KEY_BASE }}
+                        
+                              # Mailer (опционально; оставляй пустыми если не используешь)
+                              MAIL_FROM=${{ secrets.MAIL_FROM || vars.MAIL_FROM || '' }}
+                              MAIL_FALLBACK_TO=${{ secrets.MAIL_FALLBACK_TO || vars.MAIL_FALLBACK_TO || '' }}
+                              SMTP_ADDRESS=${{ secrets.SMTP_ADDRESS || vars.SMTP_ADDRESS || '' }}
+                              SMTP_PORT=${{ secrets.SMTP_PORT || vars.SMTP_PORT || '' }}
+                              SMTP_DOMAIN=${{ secrets.SMTP_DOMAIN || vars.SMTP_DOMAIN || '' }}
+                              SMTP_USER_NAME=${{ secrets.SMTP_USER_NAME || vars.SMTP_USER_NAME || '' }}
+                              SMTP_PASSWORD=${{ secrets.SMTP_PASSWORD || '' }}
+                              SMTP_AUTHENTICATION=${{ secrets.SMTP_AUTHENTICATION || vars.SMTP_AUTHENTICATION || 'plain' }}
+                              SMTP_ENABLE_STARTTLS_AUTO=${{ secrets.SMTP_ENABLE_STARTTLS_AUTO || vars.SMTP_ENABLE_STARTTLS_AUTO || 'true' }}
+                              SMTP_TLS=${{ secrets.SMTP_TLS || vars.SMTP_TLS || 'true' }}
+                              WAITLIST_NOTIFY_RECIPIENTS=${{ secrets.WAITLIST_NOTIFY_RECIPIENTS || vars.WAITLIST_NOTIFY_RECIPIENTS || '' }}
+                        
+                              # Версия сборки
+                              APP_VERSION=${{ steps.ver.outputs.version }}
+                              EOF
+                              '
 
       - name: Build & Up (Docker Compose, prod)
         run: |
-          ssh -p "${{ secrets.SSH_PORT }}" "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" bash -lc '
+          ssh -p "${{ secrets.SSH_PORT }}" "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST_PROD }}" bash -lc '
             set -euo pipefail
             cd /var/www/amply_landing
             docker compose --profile prod build \
@@ -90,6 +104,6 @@ jobs:
 
       - name: Cleanup old images (optional)
         run: |
-          ssh -p "${{ secrets.SSH_PORT }}" "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" bash -lc '
+          ssh -p "${{ secrets.SSH_PORT }}" "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST_PROD }}" bash -lc '
             docker image prune -f
           '
