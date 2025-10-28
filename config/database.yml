@@ -19,9 +19,15 @@ production:
   primary:
     <<: *default
     database: amply_production
+
   cable:
     <<: *default
     database: amply_production
+
   queue:
+    <<: *default
+    database: amply_production
+
+  cache:
     <<: *default
     database: amply_production
