@@ -49,7 +49,7 @@ ENV RAILS_MASTER_KEY=${RAILS_MASTER_KEY} \
 
 RUN bundle exec rails dartsass:build
 
-ENV PORT=3005
-EXPOSE 3005
+ENV PORT=3000
+EXPOSE 3000
 
 ENTRYPOINT ["/bin/bash", "-lc", "bundle exec rails db:prepare || true; exec bundle exec rails server -b 0.0.0.0 -p ${PORT}"]

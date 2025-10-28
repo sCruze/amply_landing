@@ -1,90 +1,95 @@
-name: CI
+name: Deploy (prod)
 
 on:
-  pull_request:
   push:
-    branches: [ main ]
+    branches: [ "main" ]
+  workflow_dispatch:
 
 jobs:
-  scan_ruby:
+  deploy:
     runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: .ruby-version
-          bundler-cache: true
-
-      - name: Scan for common Rails security vulnerabilities using static analysis
-        run: bin/brakeman --no-pager
-
-  scan_js:
-    runs-on: ubuntu-latest
+    env:
+      APP_VERSION: ${{ github.ref_name == 'main' && (startsWith(github.ref, 'refs/tags/') && github.ref_name || github.sha) || github.sha }}
 
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
         with:
-          ruby-version: .ruby-version
-          bundler-cache: true
+          fetch-depth: 0
 
-      - name: Scan for security vulnerabilities in JavaScript dependencies
-        run: bin/importmap audit
+      - name: Compute version
+        id: ver
+        run: |
+          set -euo pipefail
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          else
+            short=$(git rev-parse --short=8 HEAD)
+            echo "version=0.0.0+${short}" >> $GITHUB_OUTPUT
+          fi
 
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
+      - name: Add SSH key
+        uses: webfactory/ssh-agent@v0.9.0
         with:
-          ruby-version: .ruby-version
-          bundler-cache: true
+          ssh-private-key: ${{ secrets.SSH_KEY }}
 
-      - name: Lint code for consistent style
-        run: bin/rubocop -f github
+      - name: Trust host
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -p "${{ secrets.SSH_PORT }}" "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts
 
-  test:
-    runs-on: ubuntu-latest
+      - name: Rsync project to server
+        run: |
+          rsync -az --delete \
+            --exclude '.git' \
+            --exclude '.github' \
+            --exclude 'tmp' \
+            . "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/var/www/amply_landing"
 
-    # services:
-    #  redis:
-    #    image: redis
-    #    ports:
-    #      - 6379:6379
-    #    options: --health-cmd "redis-cli ping" --health-interval 10s --health-timeout 5s --health-retries 5
-    steps:
-      - name: Install packages
-        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y build-essential git libyaml-dev pkg-config google-chrome-stable
+      - name: Write .env on server
+        run: |
+          ssh -p "${{ secrets.SSH_PORT }}" "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" bash -lc '
+            set -euo pipefail
+            cd /var/www/amply_landing
+            cat > .env <<EOF
+                            RAILS_ENV=production
+                            APP_HOST=${{ secrets.APP_DOMAIN || 'localhost' }}
+                            APP_PROTOCOL=https
+                            APP_PORT=443
+                            
+                            # DB
+                            PGHOST=db
+                            PGUSER=postgres
+                            PGPASSWORD=${{ secrets.PGPASSWORD_PROD }}
+                            PGDATABASE=app_production
+                            
+                            # Redis
+                            REDIS_URL=redis://redis:6379/1
+                            
+                            # Secrets
+                            RAILS_MASTER_KEY=${{ secrets.RAILS_MASTER_KEY }}
+                            SECRET_KEY_BASE=${{ secrets.SECRET_KEY_BASE }}
+                            
+                            # Version
+                            APP_VERSION=${{ steps.ver.outputs.version }}
+                            EOF'
 
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Build & Up (Docker Compose, prod)
+        run: |
+          ssh -p "${{ secrets.SSH_PORT }}" "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" bash -lc '
+            set -euo pipefail
+            cd /var/www/amply_landing
+            docker compose --profile prod build \
+              --build-arg APP_VERSION="${{ steps.ver.outputs.version }}" \
+              --build-arg RAILS_MASTER_KEY="${{ secrets.RAILS_MASTER_KEY }}" \
+              --build-arg SECRET_KEY_BASE="${{ secrets.SECRET_KEY_BASE }}"
+            docker compose --profile prod up -d --force-recreate
+            docker compose run --rm prod rails db:migrate
+          '
 
-      - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: .ruby-version
-          bundler-cache: true
-
-      - name: Run tests
-        env:
-          RAILS_ENV: test
-          # REDIS_URL: redis://localhost:6379/0
-        run: bin/rails db:test:prepare test test:system
-
-      - name: Keep screenshots from failed system tests
-        uses: actions/upload-artifact@v4
-        if: failure()
-        with:
-          name: screenshots
-          path: ${{ github.workspace }}/tmp/screenshots
-          if-no-files-found: ignore
+      - name: Cleanup old images (optional)
+        run: |
+          ssh -p "${{ secrets.SSH_PORT }}" "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" bash -lc '
+            docker image prune -f
+          '
