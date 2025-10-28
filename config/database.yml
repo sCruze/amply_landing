@@ -1,18 +1,25 @@
 default: &default
   adapter: postgresql
   encoding: unicode
-  # For details on connection pooling, see Rails configuration guide
-  # https://guides.rubyonrails.org/configuring.html#database-pooling
-  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS", 5) %>
+  host: <%= ENV.fetch("PGHOST", "db") %>
+  port: <%= ENV.fetch("PGPORT", 5432) %>
+  username: <%= ENV.fetch("PGUSER", "postgres") %>
+  password: <%= ENV["PGPASSWORD"] %>
 
 development:
   <<: *default
-  database: amply_development
+  database: <%= ENV.fetch("PGDATABASE", "amply_development") %>
 
 test:
   <<: *default
-  database: amply_test
+  database: <%= ENV.fetch("PGDATABASE", "amply_test") %>
 
 production:
-  <<: *default
-  database: amply_production
+  primary:
+    <<: *default
+    database: <%= ENV.fetch("PGDATABASE", "amply_production") %>
+
+  cable:
+    <<: *default
+    database: <%= ENV.fetch("PGDATABASE", "amply_production") %>
