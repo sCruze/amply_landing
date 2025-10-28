@@ -20,10 +20,10 @@ jobs:
         run: |
           set -euo pipefail
           if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
-            echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+            echo "version=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
           else
             short=$(git rev-parse --short=8 HEAD)
-            echo "version=0.0.0+${short}" >> $GITHUB_OUTPUT
+            echo "version=0.0.0+${short}" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Add SSH key
@@ -31,98 +31,139 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_KEY_PROD }}
 
-      - name: Trust host
+      - name: Trust host (port-aware)
         run: |
           mkdir -p ~/.ssh
           ssh-keyscan -p "${{ secrets.SSH_PORT }}" "${{ secrets.SSH_HOST_PROD }}" >> ~/.ssh/known_hosts
 
-      - name: Prepare server (rsync, dirs, perms)
+      # ======= Копирование кода без sudo и без rsync на сервере =======
+      - name: Upload project (rsync if available, else tar over SSH)
+        env:
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_HOST: ${{ secrets.SSH_HOST_PROD }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
         run: |
-          ssh -p "${{ secrets.SSH_PORT }}" "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST_PROD }}" bash -lc '
-            set -euo pipefail
-            # rsync (если вдруг не установлен)
-            if ! command -v rsync >/dev/null 2>&1; then
-              sudo apt-get update -y
-              sudo apt-get install -y rsync
-            fi
-            # каталог для деплоя в HOME
-            mkdir -p /home/deploy/amply_landing
-            # права (полезно, если каталог создавался от root)
-            sudo chown -R deploy:deploy /home/deploy/amply_landing
-          '
+          set -euo pipefail
+          REMOTE_DIR="~/amply_landing"
 
-      - name: Rsync project to server
-        run: |
-          rsync -az --delete \
-            --exclude '.git' \
-            --exclude '.github' \
-            --exclude 'tmp' \
-            . "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST_PROD }}:/home/deploy/amply_landing"
+          # Создаём каталог на сервере (без sudo)
+          ssh -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" "mkdir -p $REMOTE_DIR"
+
+          # Пробуем rsync (на runner он есть; на сервере может не быть)
+          if ssh -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" "command -v rsync >/dev/null 2>&1"; then
+            rsync -az --delete -e "ssh -p $SSH_PORT" \
+              --exclude '.git' \
+              --exclude '.github' \
+              --exclude 'tmp' \
+              ./ "$SSH_USER@$SSH_HOST:$REMOTE_DIR/"
+          else
+            # Fallback: tar по SSH (не требует rsync на сервере)
+            tar -czf - \
+              --exclude='.git' \
+              --exclude='.github' \
+              --exclude='tmp' \
+              . | ssh -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" "tar -xzf - -C $REMOTE_DIR"
+          fi
 
       - name: Write .env on server
+        env:
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_HOST: ${{ secrets.SSH_HOST_PROD }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          APP_HOST: ${{ secrets.APP_DOMAIN_PROD }}
+          PGPASSWORD_PROD: ${{ secrets.PGPASSWORD_PROD }}
+          RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
+          SECRET_KEY_BASE: ${{ secrets.SECRET_KEY_BASE }}
+          MAIL_FROM: ${{ secrets.MAIL_FROM }}
+          MAIL_FALLBACK_TO: ${{ secrets.MAIL_FALLBACK_TO }}
+          SMTP_ADDRESS: ${{ secrets.SMTP_ADDRESS }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_DOMAIN: ${{ secrets.SMTP_DOMAIN }}
+          SMTP_USER_NAME: ${{ secrets.SMTP_USER_NAME }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          SMTP_AUTHENTICATION: ${{ secrets.SMTP_AUTHENTICATION }}
+          SMTP_ENABLE_STARTTLS_AUTO: ${{ secrets.SMTP_ENABLE_STARTTLS_AUTO }}
+          SMTP_TLS: ${{ secrets.SMTP_TLS }}
+          WAITLIST_NOTIFY_RECIPIENTS: ${{ secrets.WAITLIST_NOTIFY_RECIPIENTS }}
         run: |
-          ssh -p "${{ secrets.SSH_PORT }}" "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST_PROD }}" bash -lc '
+          set -euo pipefail
+          ssh -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" bash -lc "'
             set -euo pipefail
-            cd /home/deploy/amply_landing
+            cd ~/amply_landing
             cat > .env <<EOF
-                            RAILS_ENV=production
-                            APP_HOST=${{ secrets.APP_DOMAIN_PROD || vars.APP_DOMAIN_PROD || 'localhost' }}
-                            APP_PROTOCOL=https
-                            APP_PORT=443
-                            
-                            # Postgres (контейнер db + сеть compose)
-                            PGHOST=db
-                            PGUSER=postgres
-                            PGPASSWORD=${{ secrets.PGPASSWORD_PROD }}
-                            PGDATABASE=amply_production
-                            
-                            # Redis
-                            REDIS_URL=redis://redis:6379/1
-                            
-                            # Rails secrets
-                            RAILS_MASTER_KEY=${{ secrets.RAILS_MASTER_KEY }}
-                            SECRET_KEY_BASE=${{ secrets.SECRET_KEY_BASE }}
-                            
-                            # Mailer (опционально)
-                            MAIL_FROM=${{ secrets.MAIL_FROM || vars.MAIL_FROM || '' }}
-                            MAIL_FALLBACK_TO=${{ secrets.MAIL_FALLBACK_TO || vars.MAIL_FALLBACK_TO || '' }}
-                            SMTP_ADDRESS=${{ secrets.SMTP_ADDRESS || vars.SMTP_ADDRESS || '' }}
-                            SMTP_PORT=${{ secrets.SMTP_PORT || vars.SMTP_PORT || '' }}
-                            SMTP_DOMAIN=${{ secrets.SMTP_DOMAIN || vars.SMTP_DOMAIN || '' }}
-                            SMTP_USER_NAME=${{ secrets.SMTP_USER_NAME || vars.SMTP_USER_NAME || '' }}
-                            SMTP_PASSWORD=${{ secrets.SMTP_PASSWORD || '' }}
-                            SMTP_AUTHENTICATION=${{ secrets.SMTP_AUTHENTICATION || vars.SMTP_AUTHENTICATION || 'plain' }}
-                            SMTP_ENABLE_STARTTLS_AUTO=${{ secrets.SMTP_ENABLE_STARTTLS_AUTO || vars.SMTP_ENABLE_STARTTLS_AUTO || 'true' }}
-                            SMTP_TLS=${{ secrets.SMTP_TLS || vars.SMTP_TLS || 'true' }}
-                            WAITLIST_NOTIFY_RECIPIENTS=${{ secrets.WAITLIST_NOTIFY_RECIPIENTS || vars.WAITLIST_NOTIFY_RECIPIENTS || '' }}
-                            
-                            # Версия сборки
-                            APP_VERSION=${{ steps.ver.outputs.version }}
-                            EOF
-                            '
+              RAILS_ENV=production
+              APP_HOST=${APP_HOST:-localhost}
+              APP_PROTOCOL=https
+              APP_PORT=443
+              
+              # Postgres (compose network)
+              PGHOST=db
+              PGUSER=postgres
+              PGPASSWORD=${PGPASSWORD_PROD:-}
+              PGDATABASE=amply_production
+              
+              # Redis
+              REDIS_URL=redis://redis:6379/1
+              
+              # Rails secrets
+              RAILS_MASTER_KEY=${RAILS_MASTER_KEY:-}
+              SECRET_KEY_BASE=${SECRET_KEY_BASE:-}
+              
+              # Mailer (optional)
+              MAIL_FROM=${MAIL_FROM:-}
+              MAIL_FALLBACK_TO=${MAIL_FALLBACK_TO:-}
+              SMTP_ADDRESS=${SMTP_ADDRESS:-}
+              SMTP_PORT=${SMTP_PORT:-}
+              SMTP_DOMAIN=${SMTP_DOMAIN:-}
+              SMTP_USER_NAME=${SMTP_USER_NAME:-}
+              SMTP_PASSWORD=${SMTP_PASSWORD:-}
+              SMTP_AUTHENTICATION=${SMTP_AUTHENTICATION:-plain}
+              SMTP_ENABLE_STARTTLS_AUTO=${SMTP_ENABLE_STARTTLS_AUTO:-true}
+              SMTP_TLS=${SMTP_TLS:-true}
+              WAITLIST_NOTIFY_RECIPIENTS=${WAITLIST_NOTIFY_RECIPIENTS:-}
+              
+              # Build version
+              APP_VERSION=${{ steps.ver.outputs.version }}
+            EOF
+            '"
 
       - name: Build & Up (Docker Compose, prod)
+        env:
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_HOST: ${{ secrets.SSH_HOST_PROD }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
+          SECRET_KEY_BASE: ${{ secrets.SECRET_KEY_BASE }}
         run: |
-          ssh -p "${{ secrets.SSH_PORT }}" "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST_PROD }}" bash -lc '
+          set -euo pipefail
+          ssh -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" bash -lc "'
             set -euo pipefail
-            cd /home/deploy/amply_landing
+            cd ~/amply_landing
             docker compose --profile prod build \
-              --build-arg APP_VERSION="${{ steps.ver.outputs.version }}" \
-              --build-arg RAILS_MASTER_KEY="${{ secrets.RAILS_MASTER_KEY }}" \
-              --build-arg SECRET_KEY_BASE="${{ secrets.SECRET_KEY_BASE }}"
+              --build-arg APP_VERSION=${{ steps.ver.outputs.version }} \
+              --build-arg RAILS_MASTER_KEY=${RAILS_MASTER_KEY} \
+              --build-arg SECRET_KEY_BASE=${SECRET_KEY_BASE}
             docker compose --profile prod up -d --force-recreate
-          '
+          '"
 
       - name: DB prepare (create + migrate)
+        env:
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_HOST: ${{ secrets.SSH_HOST_PROD }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
         run: |
-          ssh -p "${{ secrets.SSH_PORT }}" "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST_PROD }}" bash -lc '
+          set -euo pipefail
+          ssh -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" bash -lc "'
             set -euo pipefail
-            cd /home/deploy/amply_landing
+            cd ~/amply_landing
             docker compose run --rm prod rails db:prepare
-          '
+          '"
 
       - name: Cleanup old images (optional)
+        env:
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_HOST: ${{ secrets.SSH_HOST_PROD }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
         run: |
-          ssh -p "${{ secrets.SSH_PORT }}" "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST_PROD }}" bash -lc '
-            docker image prune -f
-          '
+          set -euo pipefail
+          ssh -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" "docker image prune -f"
