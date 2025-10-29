@@ -140,10 +140,10 @@ jobs:
 
       - name: DB prepare (create + migrate)
         run: |
-          ssh -p "${{ secrets.SSH_PORT }}" "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST_PROD }}" bash -lc '
+          ssh -p "${{ secrets.SSH_PORT }}" "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST_PROD }}" '
             set -eo pipefail
             cd ~/amply_landing
-            docker compose --profile prod run --rm prod bin/rails db:prepare
+            docker compose --profile prod exec -T prod bin/rails db:prepare
           '
 
       - name: Cleanup old images (optional)
