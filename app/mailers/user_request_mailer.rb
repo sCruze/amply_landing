@@ -2,8 +2,8 @@
 
 class UserRequestMailer < ApplicationMailer
 
-  def confirmation(user_request_id)
-    @user_request = UserRequest.find(user_request_id)
+  def confirmation(entity)
+    @user_request = UserRequest.find(entity.id)
 
     mail(
       to:      @user_request.email,
@@ -11,8 +11,8 @@ class UserRequestMailer < ApplicationMailer
     )
   end
 
-  def team_digest(user_request_id, recipients: nil)
-    @user_request = UserRequest.find(user_request_id)
+  def team_digest(entity.id, recipients: nil)
+    @user_request = UserRequest.find(entity.id)
 
     @total_count  = UserRequest.count
     @weekly_count = UserRequest.where("created_at >= ?", 7.days.ago).count

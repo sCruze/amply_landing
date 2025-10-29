@@ -9,9 +9,9 @@ class UserRequest < ApplicationRecord
 
   private
 
-    def send_emails_now
-      UserRequestMailer.confirmation(self).deliver_now
-      UserRequestMailer.team_digest(self).deliver_now
-    end
+  def send_emails_now
+    UserRequestMailer.confirmation(self).deliver_now
+    UserRequestMailer.team_digest(self).deliver_now
+  end
 
 end
