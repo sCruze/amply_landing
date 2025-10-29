@@ -96,7 +96,7 @@ Rails.application.configure do
   port = (ENV["SMTP_PORT"] || "465").to_i
   use_ssl_port = (port == 465)
 
-  sconfig.action_mailer.smtp_settings = {
+  config.action_mailer.smtp_settings = {
     address:              ENV["SMTP_ADDRESS"],
     port:                 port,
     domain:               ENV["SMTP_DOMAIN"],
