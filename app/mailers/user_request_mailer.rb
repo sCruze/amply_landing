@@ -11,7 +11,7 @@ class UserRequestMailer < ApplicationMailer
     )
   end
 
-  def team_digest(entity.id, recipients: nil)
+  def team_digest(entity, recipients: nil)
     @user_request = UserRequest.find(entity.id)
 
     @total_count  = UserRequest.count
