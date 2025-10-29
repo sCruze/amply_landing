@@ -144,6 +144,7 @@ services:
       - amply-dev-network
 
   prod:
+    image: amply_landing:latest
     build:
       context: .
       dockerfile: ./production.Dockerfile
@@ -177,12 +178,18 @@ services:
 
   queue:
     image: amply_landing:latest
+    pull_policy: never
     profiles: [ "prod" ]
     restart: unless-stopped
-    env_file: .env
+    env_file:
+      - .env
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     command: bash -lc "bundle exec rails solid_queue:start"
+    networks: [ amply-network ]
 
 volumes:
   pg_data:
