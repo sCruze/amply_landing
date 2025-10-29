@@ -1,7 +1,7 @@
 class ApplicationMailer < ActionMailer::Base
-  default from:        -> { %("#{ENV.fetch('MAIL_FROM_NAME', 'Amply')} <#{ENV.fetch('MAIL_FROM_ADDRESS')}>") }
-  default reply_to:    -> { ENV.fetch('MAIL_REPLY_TO', ENV.fetch('MAIL_FROM_ADDRESS')) }
-  default return_path: -> { ENV.fetch('MAIL_FROM_ADDRESS') }
+  default from:        -> { %("#{ENV["MAIL_FROM_NAME"]} <#{ENV["MAIL_FROM_ADDRESS"]}>") }
+  default reply_to:    -> { ENV["MAIL_REPLY_TO"] }
+  default return_path: -> { ENV["MAIL_FROM_ADDRESS"] }
 
   layout "mailer"
 

@@ -107,13 +107,13 @@ Rails.application.configure do
   }.compact
   config.action_mailer.smtp_settings = smtp_settings
   config.action_mailer.default_options = {
-    from:        %("#{ENV.fetch('MAIL_FROM_NAME', 'Amply')} <#{ENV.fetch('MAIL_FROM_ADDRESS')}>"),
-    reply_to:    ENV.fetch('MAIL_REPLY_TO', ENV.fetch('MAIL_FROM_ADDRESS')),
-    return_path: ENV.fetch('MAIL_FROM_ADDRESS')
+    from:        %("#{ENV["MAIL_FROM_NAME"]} <#{ENV["MAIL_FROM_ADDRESS"]}>"),
+    reply_to:    ENV["MAIL_REPLY_TO"],
+    return_path: ENV["MAIL_FROM_ADDRESS"]
   }
   config.action_mailer.default_url_options = {
-    protocol: ENV.fetch("APP_PROTOCOL", "https"),
-    host:     ENV.fetch("APP_HOST")
+    protocol: "https",
+    host:     ENV["APP_HOST"]
   }
 
   config.action_mailer.raise_delivery_errors = true
