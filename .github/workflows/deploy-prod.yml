@@ -89,7 +89,8 @@ jobs:
               RAILS_MASTER_KEY=${{ secrets.RAILS_MASTER_KEY }}
               SECRET_KEY_BASE=${{ secrets.SECRET_KEY_BASE_PROD }}
               
-              MAIL_FROM=${{ secrets.MAIL_FROM }}
+              MAIL_FROM_NAME=${{ vars.MAIL_FROM_NAME }}
+              MAIL_FROM=${{ vars.MAIL_FROM }}
               MAIL_FALLBACK_TO=${{ secrets.MAIL_FALLBACK_TO }}
               SMTP_ADDRESS=${{ secrets.SMTP_ADDRESS }}
               SMTP_PORT=${{ secrets.SMTP_PORT }}
@@ -98,8 +99,8 @@ jobs:
               SMTP_PASSWORD=${{ secrets.SMTP_PASSWORD }}
               SMTP_AUTHENTICATION=${{ secrets.SMTP_AUTHENTICATION }}
               SMTP_ENABLE_STARTTLS_AUTO=${{ secrets.SMTP_ENABLE_STARTTLS_AUTO }}
-              SMTP_TLS=${{ secrets.SMTP_TLS }}
-              WAITLIST_NOTIFY_RECIPIENTS=${{ secrets.WAITLIST_NOTIFY_RECIPIENTS }}
+              SMTP_TLS=${{ vars.SMTP_TLS }}
+              WAITLIST_NOTIFY_RECIPIENTS=${{ vars.WAITLIST_NOTIFY_RECIPIENTS }}
               
               APP_VERSION=${{ steps.ver.outputs.version }}
             EOF
@@ -140,7 +141,7 @@ jobs:
           ssh -p "${{ secrets.SSH_PORT }}" "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST_PROD }}" bash -lc '
             set -eo pipefail
             cd ~/amply_landing
-            docker compose --profile prod run --rm prod rails db:prepare
+            docker compose --profile prod run --rm prod bin/rails db:prepare
           '
 
       - name: Cleanup old images (optional)

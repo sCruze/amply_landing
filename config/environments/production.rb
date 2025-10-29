@@ -99,11 +99,24 @@ Rails.application.configure do
     domain:               ENV["SMTP_DOMAIN"],
     user_name:            ENV["SMTP_USER_NAME"],
     password:             ENV["SMTP_PASSWORD"],
-    authentication:       (ENV["SMTP_AUTHENTICATION"] || "plain").to_sym,
+    authentication:       (ENV["SMTP_AUTHENTICATION"] || "login").to_sym,
     enable_starttls_auto: ENV.key?("SMTP_ENABLE_STARTTLS_AUTO") ? ENV["SMTP_ENABLE_STARTTLS_AUTO"] == "true" : true,
     tls:                  ENV.key?("SMTP_TLS") ? ENV["SMTP_TLS"] == "true" : true,
     open_timeout:         30,
     read_timeout:         60
   }.compact
   config.action_mailer.smtp_settings = smtp_settings
+  config.action_mailer.default_options = {
+    from:        %("#{ENV.fetch('MAIL_FROM_NAME', 'Amply')} <#{ENV.fetch('MAIL_FROM_ADDRESS')}>"),
+    reply_to:    ENV.fetch('MAIL_REPLY_TO', ENV.fetch('MAIL_FROM_ADDRESS')),
+    return_path: ENV.fetch('MAIL_FROM_ADDRESS')
+  }
+  config.action_mailer.default_url_options = {
+    protocol: ENV.fetch("APP_PROTOCOL", "https"),
+    host:     ENV.fetch("APP_HOST")
+  }
+
+  config.action_mailer.raise_delivery_errors = true
+  config.action_mailer.perform_deliveries   = true
+
 end
