@@ -4,8 +4,6 @@ class UserRequestsController < ApplicationController
 
     respond_to do |format|
       if @user_request.save
-        UserRequestMailer.confirmation(@user_request.id).deliver_later
-        UserRequestMailer.team_digest(@user_request.id).deliver_later
 
         @name = @user_request.name
         @user_request = UserRequest.new
