@@ -78,6 +78,7 @@ jobs:
               APP_HOST=${{ secrets.APP_DOMAIN_PROD }}
               APP_PROTOCOL=https
               APP_PORT=443
+              PORT=${{ vars.PORT_APP_PROD }}
               
               PGHOST=db
               PGUSER=postgres

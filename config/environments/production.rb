@@ -93,24 +93,22 @@ Rails.application.configure do
 
   config.action_mailer.delivery_method = (ENV["MAILER_DELIVERY_METHOD"] || "smtp").to_sym
 
-  smtp_settings = {
+  port = (ENV["SMTP_PORT"] || "465").to_i
+  use_ssl_port = (port == 465)
+
+  sconfig.action_mailer.smtp_settings = {
     address:              ENV["SMTP_ADDRESS"],
-    port:                 ENV["SMTP_PORT"]&.to_i,
+    port:                 port,
     domain:               ENV["SMTP_DOMAIN"],
     user_name:            ENV["SMTP_USER_NAME"],
     password:             ENV["SMTP_PASSWORD"],
     authentication:       (ENV["SMTP_AUTHENTICATION"] || "login").to_sym,
-    enable_starttls_auto: ENV.key?("SMTP_ENABLE_STARTTLS_AUTO") ? ENV["SMTP_ENABLE_STARTTLS_AUTO"] == "true" : true,
-    tls:                  ENV.key?("SMTP_TLS") ? ENV["SMTP_TLS"] == "true" : true,
+    enable_starttls_auto: use_ssl_port ? false : true,
+    tls:                  use_ssl_port ? true  : false,
     open_timeout:         30,
     read_timeout:         60
   }.compact
-  config.action_mailer.smtp_settings = smtp_settings
-  config.action_mailer.default_options = {
-    from:        %("#{ENV["MAIL_FROM_NAME"]} <#{ENV["MAIL_FROM_ADDRESS"]}>"),
-    reply_to:    ENV["MAIL_REPLY_TO"],
-    return_path: ENV["MAIL_FROM_ADDRESS"]
-  }
+
   config.action_mailer.default_url_options = {
     protocol: "https",
     host:     ENV["APP_HOST"]
