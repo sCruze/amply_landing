@@ -1,9 +1,8 @@
 %main.l-page__main{ role: "main" }
   .l-page__content.container
-    / ===================== HERO =====================
     %section.hero{ data: { controller: "reveal", reveal_once_value: "true", reveal_threshold_value: "0.0", reveal_root_margin_value: "0px 0px -8% 0px" } }
       %h1.hero__title.t-h1{ data: { reveal_target: "item", reveal_duration_value: "720", reveal_delay_value: "0", reveal_helper_class: "reveal--rise" } }
-        BRING ORDER TO YOUR DAY WITHOUT THE NOISE.
+        = @h1
       %p.hero__subtitle.t-subtitle{ data: { reveal_target: "item", reveal_duration_value: "720", reveal_delay_value: "120", reveal_helper_class: "reveal--rise" } }
         Amply helps you organize your thoughts,
         %br
@@ -12,44 +11,38 @@
         .ui-button.ui-button--red.ui-button--size-lg{ data: { controller: "anchor", action: "click->anchor#anchorScrollBlock", anchor: "waitlist" } }
           Join the waitlist
 
-    / ================ FEATURES (cinematic) ======================
     %section#features.features{ data: { controller: "reveal", reveal_once_value: "true", reveal_threshold_value: "0.0", reveal_root_margin_value: "0px 0px -10% 0px" } }
       %h2.features__title.t-h2{ data: { reveal_target: "item", reveal_duration_value: "640", reveal_delay_value: "0", reveal_helper_class: "reveal--slide-up" } }
         Designed to boost your productivity
 
       .features__list
-        / 1) Swoop слева + подпись после
         .features__item
           .features__img__wrapper{ data: { reveal_target: "item", reveal_duration_value: "720", reveal_delay_value: "0", reveal_helper_class: "reveal--swoop-left" } }
-            = image_tag "features/landing/productivity/productivity-turn-plans.png", alt: ""
+            = image_tag "features/landing/productivity/productivity-turn-plans.png", alt: "Amply app interface showing task list and reminders"
           %p.features__caption.text-xl{ data: { reveal_target: "item", reveal_duration_value: "560", reveal_delay_value: "180", reveal_helper_class: "reveal--caption" } }
             Turn plans into progress.
 
-        / 2) Глубокий подъём снизу + лёгкий сдвиг вправо
         .features__item
           .features__img__wrapper{ data: { reveal_target: "item", reveal_duration_value: "720", reveal_delay_value: "120", reveal_helper_class: "reveal--lift-deep", reveal_offset_x_value: "4vw", reveal_rotate_value: "2deg" } }
-            = image_tag "features/landing/productivity/productivity-capture-thoughts.png", alt: ""
+            = image_tag "features/landing/productivity/productivity-capture-thoughts.png", alt: "Creating a new note in the Amply productivity app"
           %p.features__caption.text-xl{ data: { reveal_target: "item", reveal_duration_value: "560", reveal_delay_value: "300", reveal_helper_class: "reveal--caption" } }
             Capture thoughts instantly.
 
-        / 3) Swoop справа + подпись после
         .features__item
           .features__img__wrapper{ data: { reveal_target: "item", reveal_duration_value: "720", reveal_delay_value: "240", reveal_helper_class: "reveal--swoop-right" } }
-            = image_tag "features/landing/productivity/productivity-feel-done.png", alt: ""
+            = image_tag "features/landing/productivity/productivity-feel-done.png", alt: "Marking completed tasks in Amply"
           %p.features__caption.text-xl{ data: { reveal_target: "item", reveal_duration_value: "560", reveal_delay_value: "420", reveal_helper_class: "reveal--caption" } }
             Feel the satisfaction of done.
 
-        / 4) Двойная карточка: главный слева, доп. — справа (разбежка по времени)
         .features__item
           .features__item--img--group
             .features__img__wrapper{ data: { reveal_target: "item", reveal_duration_value: "760", reveal_delay_value: "360", reveal_helper_class: "reveal--swoop-left", reveal_rotate_value: "-6deg" } }
-              = image_tag "features/landing/productivity/productivity-and-more-main.png", alt: ""
+              = image_tag "features/landing/productivity/productivity-and-more-main.png", alt: "Amply mobile app showing productivity tools"
             .features__img__wrapper{ data: { reveal_target: "item", reveal_duration_value: "760", reveal_delay_value: "460", reveal_helper_class: "reveal--swoop-right", reveal_rotate_value: "6deg", reveal_scale_value: ".96" } }
-              = image_tag "features/landing/productivity/productivity-and-more-sub.png", alt: ""
+              = image_tag "features/landing/productivity/productivity-and-more-sub.png", alt: "Amply mobile app showing productivity tools"
           %p.features__caption.text-xl{ data: { reveal_target: "item", reveal_duration_value: "560", reveal_delay_value: "620", reveal_helper_class: "reveal--caption" } }
             And much more in Amply
 
-    / ================ SEGMENTS (mixed) ======================
     %section#segments.segments{ data: { controller: "reveal", reveal_once_value: "true", reveal_threshold_value: "0.0", reveal_root_margin_value: "0px 0px -12% 0px" } }
       %h2.segments__title.t-h2{ data: { reveal_target: "item", reveal_duration_value: "640", reveal_delay_value: "0", reveal_helper_class: "reveal--slide-up" } }
         BUILT FOR EVERYONE WHO WANTS TO STAY ORGANIZED
@@ -68,12 +61,11 @@
             %p.segments__card-text.t-text-20 Keep your learning on track
 
         .segments__card{ data: { reveal_target: "item", reveal_duration_value: "620", reveal_delay_value: "240", reveal_helper_class: "reveal--right" } }
-          = image_tag "features/landing/segments/segments-icon-work.png", alt: "", class: "segments__card-icon"
+          = image_tag "features/landing/segments/segments-icon-life.png", alt: "", class: "segments__card-icon"
           .segments__card--description
             %h3.segments__card-title For Life
             %p.segments__card-text.t-text-20 Bring order to daily routines
 
-    / ================ WAITLIST (без анимации) ======================
     %section#waitlist.waitlist
       %h2.waitlist__title.t-h2 JOIN THE WAITLIST
 

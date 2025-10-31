@@ -1,0 +1,7 @@
+- target = switch_locale_label
+= link_to url_for(locale: target),
+          class: "locale-switcher",
+          aria_label: t("aria.switch_locale", lang: target.to_s.upcase) do
+  = image_tag "shared/icons/globe.svg",
+              alt: "", role: "presentation", class: "locale-switcher__icon"
+  %span.locale-switcher__label= switch_locale_label

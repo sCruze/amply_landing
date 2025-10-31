@@ -1,46 +1,53 @@
-import { Controller } from "@hotwired/stimulus"
+import { Controller } from "@hotwired/stimulus";
 
-// Connects to data-controller="anchor"
 export default class extends Controller {
-  header = document.querySelector('header')
-  body = document.querySelector('body')
-  mobileMenu = document.querySelector('.mobile-menu')
+    static values = {
+        offset: { type: Number, default: 100 },
+        speed: Number
+    };
 
-  // Якорь
-  anchorScrollBlock(e) {
-    const header = document.querySelector('header')
+    go(e) {
+        const id = e.params.id;
+        if (!id) return;
 
-    const scrollTarget = document.querySelector(`#${e.target.getAttribute('data-anchor')}`)
-    const topOffset = header.getBoundingClientRect().height
-    const elementPosition = scrollTarget.getBoundingClientRect().top + window.scrollY
-    const offsetPosition = elementPosition - topOffset - 100
+        const el = document.getElementById(id);
 
-    const customSpeed = e.target.getAttribute('data-scroll-speed')
-    if (customSpeed) {
-      const duration = parseInt(customSpeed, 10);
-      const start = window.scrollX;
-      const distance = offsetPosition - start;
+        if (el) {
+            e.preventDefault();
+            e.stopPropagation();
 
-      const startTime = performance.now();
+            const header = document.querySelector("header");
+            const headerH = header ? header.getBoundingClientRect().height : 0;
+            const extra = Number(e.params.offset || this.offsetValue || 0);
 
-      const animateScroll = () => {
-        const elapsedTime = performance.now() - startTime;
-        const progress = elapsedTime / duration;
+            const targetY =
+                Math.max(0, el.getBoundingClientRect().top + window.scrollY - headerH - extra);
 
-        if (progress < 1) {
-          window.scrollTo(0, start + distance * progress);
-          requestAnimationFrame(animateScroll);
-        } else {
-          window.scrollTo(0, offsetPosition); // Проверяем и корректируем, чтобы точно достичь целевой позиции
+            const mm = document.querySelector(".mobile-menu.is-open");
+            if (mm) mm.classList.remove("is-open");
+
+            if (this.hasSpeedValue) {
+                this.animateScrollTo(targetY, this.speedValue);
+            } else {
+                window.scrollTo({ top: targetY, behavior: "smooth" });
+            }
+            history.replaceState(null, "", `#${id}`);
         }
-      }
-
-      requestAnimationFrame(animateScroll);
-    } else {
-      window.scrollBy({
-        top: offsetPosition - window.pageYOffset,
-        behavior: 'smooth'
-      });
     }
-  }
+
+    animateScrollTo(targetY, duration = 500) {
+        const startY = window.scrollY;
+        const dist = targetY - startY;
+        const t0 = performance.now();
+
+        const step = (now) => {
+            const t = Math.min(1, (now - t0) / duration);
+            // easeInOutQuad
+            const eased = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+            window.scrollTo(0, startY + dist * eased);
+            if (t < 1) requestAnimationFrame(step);
+        };
+
+        requestAnimationFrame(step);
+    }
 }

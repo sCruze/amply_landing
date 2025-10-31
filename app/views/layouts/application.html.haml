@@ -2,10 +2,13 @@
 %html
   %head
     %meta{content: "text/html; charset=UTF-8", "http-equiv" => "Content-Type"}
-    %title= content_for(:title) || "Amply Landing"
+    %title= @meta_title
     %meta{content: "width=device-width,initial-scale=1", name: "viewport"}
     %meta{content: "yes", name: "apple-mobile-web-app-capable"}
     %meta{content: "yes", name: "mobile-web-app-capable"}
+    %meta{name: "description", content: meta_description}
+    %meta{name: "keywords", content: meta_keywords}
+    %meta{charset: "UTF-8"}
     = csrf_meta_tags
     = csp_meta_tag
     = yield :head
@@ -26,6 +29,6 @@
 
     = yield
 
-    -# = render "layouts/footer"
+    = render "layouts/footer/app"
 
     = turbo_frame_tag "modal_portal_frame"

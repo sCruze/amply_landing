@@ -13,6 +13,11 @@ Rails.application.routes.draw do
   root "index#index"
 
 
+  scope controller: :index do
+    get :terms                     # /terms
+    get :privacy
+  end
+
   resources :user_requests, only: %i[new create]
 
 end

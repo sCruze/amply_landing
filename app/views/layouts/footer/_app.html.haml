@@ -1,2 +1,45 @@
-%footer.l-page__footer
-  Footer
+%footer.l-page__footer.app-footer{ role: "contentinfo" }
+  .app-footer__inner.container
+    .app-footer__left
+      = link_to root_path, class: "app-footer__brand", aria_label: "Amply – home" do
+        = image_tag "shared/logos/amply-logo--grey.svg", class: "app-footer__logo"
+        %span.app-footer__brand-name Amply
+
+      %nav.app-footer__nav{ data: { controller: "anchor" }, aria: { label: "Footer" } }
+        = link_to "Features",
+                  root_path(anchor: "features"),
+                  class: "app-footer__nav--item text-lg",
+                  data: { turbo: false, action: "click->anchor#go", "anchor-id-param": "features", "anchor-offset-param": 100 }
+
+        = link_to "Early access",
+                  root_path(anchor: "waitlist"),
+                  class: "app-footer__nav--item text-lg",
+                  data: { turbo: false, action: "click->anchor#go", "anchor-id-param": "waitlist", "anchor-offset-param": 100 }
+
+        = link_to "Terms of Service",
+                  terms_path,
+                  class: "app-footer__nav--item text-lg"
+
+        = link_to "Who is for",
+                  root_path(anchor: "segments"),
+                  class: "app-footer__nav--item text-lg",
+                  data: { turbo: false, action: "click->anchor#go", "anchor-id-param": "segments", "anchor-offset-param": 100 }
+
+        = link_to "Privacy Policy",
+                  privacy_path,
+                  class: "app-footer__nav--item text-lg"
+
+      .app-footer__contacts
+        = mail_to "support@amply-space.com", "support@amply-space.com", class: "app-footer__contacts-email"
+        .app-footer__contacts-copy.text-lg--grey © #{Time.current.year} Amply. All rights reserved.
+
+    .app-footer__right
+      .app-footer__stores
+        = link_to "#", class: "store-btn store-btn--apple", "aria-label": "Download on the App Store" do
+          = image_tag "shared/app_stores/app-store-badge-en.svg", class: "store-btn__icon"
+
+        = link_to "#", class: "store-btn store-btn--google is-disabled", "aria-disabled": "true" do
+          = image_tag "shared/app_stores/google-play-badge-en.svg", class: "store-btn__icon"
+        .app-footer__soon.text-md--grey Available soon
+
+      = render "layouts/locale_switcher", current_locale: I18n.locale

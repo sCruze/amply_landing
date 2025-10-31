@@ -1,11 +1,19 @@
-%header.app-header.l-page__header.container{data: {controller: "anchor"}}
+%header.app-header.l-page__header.container{ data: { controller: "anchor" } }
   = link_to root_path, class: "app-header__logo" do
     = image_tag "shared/logos/amply-logo.svg", alt: "Amply"
 
   %nav.app-header__nav
-    %span.app-header__nav--item{ data: { action: "click->anchor#anchorScrollBlock", anchor: "features" } }
-      Features
-    %span.app-header__nav--item{ data: { action: "click->anchor#anchorScrollBlock", anchor: "segments" } }
-      Who is for
-    %span.app-header__nav--item{ data: { action: "click->anchor#anchorScrollBlock", anchor: "waitlist" } }
-      Early access
+    = link_to "Features",
+              root_path(anchor: "features"),
+              class: "app-header__nav--item",
+              data: { turbo: false, action: "click->anchor#go", "anchor-id-param": "features", "anchor-offset-param": 100 }
+
+    = link_to "Who is for",
+              root_path(anchor: "segments"),
+              class: "app-header__nav--item",
+              data: { turbo: false, action: "click->anchor#go", "anchor-id-param": "segments", "anchor-offset-param": 100 }
+
+    = link_to "Early access",
+              root_path(anchor: "waitlist"),
+              class: "app-header__nav--item",
+              data: { turbo: false, action: "click->anchor#go", "anchor-id-param": "waitlist", "anchor-offset-param": 100 }

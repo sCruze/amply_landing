@@ -128,24 +128,24 @@ docker compose --profile local up -d
 
 ```bash
 docker compose exec web bin/rails c
-docker compose exec web rails db:create
-docker compose exec web rails db:migrate
-docker compose exec web rails db:migrate:status
-docker compose exec web rails db:seed
-docker compose exec web rails db:reset
-docker compose exec web rails db:drop
-docker compose exec web rails db:rollback STEP=1
+docker compose exec web bin/rails db:create
+docker compose exec web bin/rails db:migrate
+docker compose exec web bin/rails db:migrate:status
+docker compose exec web bin/rails db:seed
+docker compose exec web bin/rails db:reset
+docker compose exec web bin/rails db:drop
+docker compose exec web bin/rails db:rollback STEP=1
 
 # Тесты (RSpec)
-docker compose exec web rails spec
+docker compose exec web bin/rails spec
 
 # откат конкретной миграции
-docker compose exec web rails db:migrate:down VERSION=YYYYMMDDHHMMSS
+docker compose exec web bin/rails db:migrate:down VERSION=YYYYMMDDHHMMSS
 # повтор конкретной миграции
-docker compose exec web rails db:migrate:up   VERSION=YYYYMMDDHHMMSS
+docker compose exec web bin/rails db:migrate:up   VERSION=YYYYMMDDHHMMSS
 
 # если используется rswag
-docker compose exec web rails rswag:specs:swaggerize
+docker compose exec web bin/rails rswag:specs:swaggerize
 ```
 
 ### Если контейнер не запущен
@@ -422,18 +422,18 @@ user.update!(password: "NewStrongPass123!", password_confirmation: "NewStrongPas
 ## Миграции: шаблоны и управление
 
 ```bash
-rails g model Pages name:string description:text h1:string alias:string
-rails g model MetaTags attach:references title:text description:text keywords:text  # в миграции: t.references :attach, polymorphic: true
-rails g model PageItems page:references name:string description:text alias:string
-rails g model PageItemElements page_item:references name:string description:text
-rails g model UserRequests phone:string email:string name:string
-rails g model Apartments name:string description:text peoples:integer price:float
-rails g model Services name:string description:text peoples:string price:float price_time:integer
-rails g model SpecialOffers name:string description_small:string start_date:date end_date:date image:string
-rails g devise Users
-rails g model Roles name:string description:text
-rails g model Profiles first_name:string last_name:string image:string user:references
-rails g model Privileges page_name:string action_name:string role:references
+rails g model Page name:string description:text h1:string slug:string
+rails g model MetaTag attachable:references{polymorphic} title:text description:text keywords:text
+rails g model PageItem page:references name:string description:text slug:string
+rails g model PageItemElement page_item:references name:string description:text
+rails g model UserRequest phone:string email:string name:string
+rails g model Apartment name:string description:text peoples:integer price:float
+rails g model Service name:string description:text peoples:string price:float price_time:integer
+rails g model SpecialOffer name:string description_small:string start_date:date end_date:date image:string
+rails g devise User
+rails g model Role name:string description:text
+rails g model Profile first_name:string last_name:string image:string user:references
+rails g model Privilege page_name:string action_name:string role:references
 ```
 
 См. команды в разделе «Ежедневные команды».
